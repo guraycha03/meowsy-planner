@@ -1,35 +1,63 @@
 "use client";
 
 import { useState } from "react";
-import DashboardCard from "../components/DashboardCard";
 import QuickCreateModal from "../components/QuickCreateModal";
+import NoteCard from "../components/NoteCard";
 
 export default function HomePage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const tasks = [
-    { id: 1, title: "Finish Math Assignment", completed: false },
-    { id: 2, title: "Read Chapter 4 - History", completed: true },
-    { id: 3, title: "Design Meowsy Sticker", completed: false },
+  // SAMPLE NOTES — later you can fetch these from DB
+  const notes = [
+    {
+      id: "n1",
+      styleId: "lavender",
+      title: "Birthday Ideas",
+      content: "Buy cat-themed balloons 🍥",
+    },
+    {
+      id: "n2",
+      styleId: "minty",
+      title: "Groceries",
+      content: "Milk • Eggs • Tuna • Coffee",
+    },
+    {
+      id: "n3",
+      styleId: "rose",
+      title: "App UI Concepts",
+      content: "Softer borders, rounded edges, pastel tones 🎨",
+    },
   ];
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
+    <div className="p-6 max-w-5xl mx-auto space-y-8">
       <h1 className="text-3xl font-bold text-[var(--color-foreground)]">
         Welcome, Meowsy!
       </h1>
 
-      <div className="grid md:grid-cols-3 gap-4">
-        {tasks.map((task) => (
-          <DashboardCard key={task.id} task={task} />
-        ))}
-      </div>
+      {/* NOTES SECTION */}
+      <section>
+        <h2 className="text-xl font-semibold text-[var(--color-foreground)] mb-3">
+          Your Notes
+        </h2>
+        <div className="grid md:grid-cols-3 gap-4">
+          {notes.map((note) => (
+            <NoteCard key={note.id} styleId={note.styleId} title={note.title}>
+              <p className="text-[var(--color-foreground)] text-sm leading-relaxed">
+                {note.content}
+              </p>
+            </NoteCard>
+          ))}
+        </div>
+      </section>
 
+      {/* Quick Add Modal */}
       <QuickCreateModal isOpen={isModalOpen} setIsOpen={setIsModalOpen} />
 
+      {/* Floating Create Button */}
       <button
         onClick={() => setIsModalOpen(true)}
-        className="fixed bottom-20 right-8 w-16 h-16 rounded-full bg-[var(--color-accent)] text-white text-3xl flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+        className="fixed bottom-24 right-8 w-16 h-16 rounded-full bg-[var(--color-accent-dark)] text-white text-3xl flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
       >
         +
       </button>

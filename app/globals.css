@@ -2,16 +2,21 @@
 
 /* Variables & colors */
 :root {
+  
   --font-sans: 'Quicksand', sans-serif; 
-  --font-appname: 'Fredoka', cursive;
+  --font-appname: 'Patrick Hand', sans-serif; /* changed from Fredoka */
+
+
 
   /* Dusty / muted palette */
   --color-background: #ffffff;       /* soft light beige background */
   --color-foreground: #4b3c34;       /* warm muted brown for text */
   --color-text-dark: #3b2d25;  
   --color-card: #f0d9c4;             /* dusty peach for cards & panels */
-  --color-accent: #eabfa7;           /* deeper dusty peach for highlights / active items */
-  --color-accent-light: #f7e7de;     /* very light peach for hover/subtle accents */
+  --color-accent: #eabfa7;
+  --color-accent2: #c2eaa7;  
+  --color-accent-light2: #e3f0db;
+  --color-accent-light: #fff5f1;     /* very light peach for hover/subtle accents */
   --color-accent-dark: #d79a84;      /* stronger peach/matte shade for emphasis */
   --color-muted: #cab5a7;            /* matte dusty green / moss for borders / less important text */
   --color-calendar-bg: rgb(255, 239, 234);      /* soft background for calendar */
@@ -59,7 +64,9 @@ button, input, textarea, select { user-select: auto; cursor: pointer; }
 .calendar-page-label {
   font-size: 1rem;
   padding: 12px 24px;
-  background-color: var(--color-card);
+  color: var(--color-dark-green);
+  font-weight: 600;
+  background-color: var(--color-accent-light);
   border: dashed var(--color-muted) 2px;
   border-radius: 0 0 32px 32px;
   box-shadow: 0 6px 16px rgba(0,0,0,0.08);
@@ -113,6 +120,7 @@ button, input, textarea, select { user-select: auto; cursor: pointer; }
 /* Remove dot underline from weekdays */
 .react-calendar__month-view__weekdays abbr {
   text-decoration: none !important;
+  font-family: var(--font-sans), cursive;
 }
 
 
