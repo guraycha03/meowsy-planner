@@ -15,7 +15,7 @@ export default function BottomNav() {
   ];
 
   return (
-    <nav className="fixed bottom-0 w-full bg-[#f0d9c4] shadow-t py-6 flex justify-around rounded-t-xl z-50">
+    <nav className="fixed bottom-0 w-full bg-[var(--color-accent-light)] shadow-t py-4 flex justify-around rounded-t-xl z-50">
       {navItems.map(({ href, label, icon: Icon }) => {
         const isActive = pathname === href;
 
@@ -23,27 +23,31 @@ export default function BottomNav() {
           <Link
             key={href}
             href={href}
-            className="flex flex-col items-center relative cursor-pointer"
+            className="flex flex-col items-center relative group cursor-pointer"
           >
             {/* Active indicator */}
-            {isActive && (
-              <span className="absolute -top-2 w-10 h-1.5 rounded-full bg-[#eabfa7] opacity-90" />
-            )}
+            <span
+              className={`absolute -top-4 w-10 h-1.5 rounded-full transition-all duration-300 ${
+                isActive
+                  ? "bg-[var(--color-dark-green)] opacity-100 scale-x-100"
+                  : "bg-[var(--color-accent-light)] opacity-0 scale-x-0"
+              }`}
+            />
 
             {/* Icon */}
             <Icon
-              size={22}
-              stroke={isActive ? "#637e3f" : "#5c544d"}
-              className="transition-colors duration-200"
+              size={24}
+              stroke={isActive ? "var(--color-dark-green)" : "var(--color-nav-inactive)"}
+              className="transition-colors duration-300 group-hover:stroke-[var(--color-accent-dark)]"
             />
 
             {/* Label */}
             <span
-              style={{
-                color: isActive ? "#637e3f" : "#5c544d",
-                fontWeight: isActive ? 600 : 400,
-                transition: "color 0.2s",
-              }}
+              className={`text-sm mt-1 transition-all duration-300 ${
+                isActive
+                  ? "text-[var(--color-dark-green)] font-semibold"
+                  : "text-[var(--color-nav-inactive)] font-medium group-hover:text-[var(--color-dark-green)]"
+              }`}
             >
               {label}
             </span>

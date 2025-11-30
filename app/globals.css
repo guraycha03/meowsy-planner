@@ -14,7 +14,7 @@
   --color-accent-light: #f7e7de;     /* very light peach for hover/subtle accents */
   --color-accent-dark: #d79a84;      /* stronger peach/matte shade for emphasis */
   --color-muted: #cab5a7;            /* matte dusty green / moss for borders / less important text */
-  --color-calendar-bg: rgb(248, 216, 210);      /* soft background for calendar */
+  --color-calendar-bg: rgb(255, 239, 234);      /* soft background for calendar */
   --color-dark-green: #637e3f;
   --color-nav-inactive: #5c544d; /* darker dusty brown/peach, visible on light card */
 
@@ -109,6 +109,12 @@ button, input, textarea, select { user-select: auto; cursor: pointer; }
   margin-bottom: 24px;
   text-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
+
+/* Remove dot underline from weekdays */
+.react-calendar__month-view__weekdays abbr {
+  text-decoration: none !important;
+}
+
 
 /* Calendar tiles */
 .react-calendar__tile abbr {
