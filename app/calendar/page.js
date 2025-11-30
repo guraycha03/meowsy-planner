@@ -22,6 +22,7 @@ export default function CalendarPage() {
   const formatMonth = (date) =>
     date.toLocaleString("en-US", { month: "long", year: "numeric" });
 
+
   const goToToday = () => {
     const today = new Date();
     setCurrentDate(today);
@@ -35,7 +36,15 @@ export default function CalendarPage() {
 
     if (index >= 0) {
       const monthEl = container.children[index];
-      monthEl?.scrollIntoView({ behavior: "smooth", block: "start" });
+
+      if (!monthEl) return;
+
+      // Scroll slightly above top so last dates aren't hidden
+      const topOffset = 120; // adjust based on bottom nav height
+      container.scrollTo({
+        top: monthEl.offsetTop - topOffset,
+        behavior: "smooth",
+      });
     }
   };
 
@@ -65,52 +74,53 @@ export default function CalendarPage() {
     requestAnimationFrame(goToToday);
   }, []);
 
-
-
-
-
-
-
-
   return (
-    <div className="flex flex-col min-h-screen w-full px-4 sm:px-8 items-center">
+    <div className="flex flex-col min-h-screen w-full px-4 sm:px-8 items-center relative">
+      {/* Calendar container */}
+      <div className="w-full max-w-[1400px] calendar-page-container relative">
+        <header className="calendar-page-label">Calendar</header>
 
-  {/* Calendar page container */}
-  <div className="w-full max-w-[1400px] calendar-page-container">
-
-    {/* Floating label */}
-    <header className="calendar-page-label">
-      Calendar
-    </header>
-
-    {/* Scrollable calendar months */}
-    <div
-      ref={containerRef}
-      onScroll={handleScroll}
-      className="w-full flex flex-col overflow-y-auto"
-      style={{ maxHeight: 'calc(100vh - 140px)' }} // adjust for nav + label
-    >
-      {months.map((monthDate, idx) => (
-        <div key={idx} className="w-full mb-12 calendar-wrapper">
-          <div className="calendar-month-title">{formatMonth(monthDate)}</div>
-          <Calendar
-            value={currentDate}
-            onClickDay={setCurrentDate}
-            activeStartDate={monthDate}
-            showNeighboringMonth={false}
-            showNavigation={false}
-            className="responsive-calendar calendar-wrapper"
-          />
+        <div
+          ref={containerRef}
+          onScroll={handleScroll}
+          className="w-full flex flex-col overflow-y-auto"
+          style={{ maxHeight: 'calc(100vh - 140px)' }}
+        >
+          {months.map((monthDate, idx) => (
+            <div key={idx} className="w-full mb-12 calendar-wrapper">
+              <div className="calendar-month-title">{formatMonth(monthDate)}</div>
+              <Calendar
+                value={currentDate}
+                onClickDay={setCurrentDate}
+                activeStartDate={monthDate}
+                showNeighboringMonth={false}
+                showNavigation={false}
+                className="responsive-calendar calendar-wrapper"
+              />
+            </div>
+          ))}
         </div>
-      ))}
-    </div>
+      </div>
 
-  </div>
-
+      {/* Floating buttons at bottom-left above nav */}
+<div className="fixed bottom-24 right-4 flex flex-col gap-3 z-20">
+  <button
+    onClick={() => alert("Add Event clicked!")}
+    className="bg-green-400 text-white px-4 py-2 rounded-full shadow-md hover:bg-green-500 transition"
+  >
+    + Add Event
+  </button>
+  <button
+    onClick={goToToday}
+    className="bg-orange-400 text-white px-4 py-2 rounded-full shadow-md hover:bg-orange-500 transition"
+  >
+    Today
+  </button>
 </div>
 
 
 
+
+    </div>
   );
 }
-  

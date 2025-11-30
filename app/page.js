@@ -24,8 +24,8 @@ export default function HomePage() {
     {
       id: "n3",
       styleId: "rose",
-      title: "App UI Concepts",
-      content: "Softer borders, rounded edges, pastel tones 🎨",
+      title: "Projects",
+      content: "Projects Projects Projects >.<",
     },
   ];
 
