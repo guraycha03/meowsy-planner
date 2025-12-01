@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { QUOTES } from "../app/data/quotes"; // adjust path
+import { QUOTES } from "../app/data/quotes";
 
 const LIGHT_BG_COLORS = [
   "#fff5f1",
@@ -12,24 +12,28 @@ const LIGHT_BG_COLORS = [
 ];
 
 export default function DailyQuote() {
-  const [currentQuote, setCurrentQuote] = useState(""); // start empty
+  // start with fixed placeholder
+  const [currentQuote, setCurrentQuote] = useState(QUOTES[0]);
   const [bgColor, setBgColor] = useState(LIGHT_BG_COLORS[0]);
   const [fade, setFade] = useState(false);
 
   useEffect(() => {
-    const getRandomQuote = () => QUOTES[Math.floor(Math.random() * QUOTES.length)];
-    const getRandomBg = () => LIGHT_BG_COLORS[Math.floor(Math.random() * LIGHT_BG_COLORS.length)];
+    // now safe to call Math.random() on client
+    const getRandomQuote = () =>
+      QUOTES[Math.floor(Math.random() * QUOTES.length)];
+    const getRandomBg = () =>
+      LIGHT_BG_COLORS[Math.floor(Math.random() * LIGHT_BG_COLORS.length)];
 
     // initialize after mount
     setCurrentQuote(getRandomQuote());
     setBgColor(getRandomBg());
 
     const interval = setInterval(() => {
-      setFade(true);
+      setFade(true); // fade out
       setTimeout(() => {
         setCurrentQuote(getRandomQuote());
         setBgColor(getRandomBg());
-        setFade(false);
+        setFade(false); // fade in
       }, 1000);
     }, 6000);
 
