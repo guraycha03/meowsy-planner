@@ -1,32 +1,35 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import NoteCard, { NOTE_STYLES } from "../../components/NoteCard";
 
+// Lazy initializer function for notes
+function getInitialNotes() {
+  if (typeof window === "undefined") return []; // SSR safety
+  const storedNotes = JSON.parse(localStorage.getItem("notes") || "[]");
+  return storedNotes.map((note) => ({
+    ...note,
+    styleId: note.styleId || NOTE_STYLES[Math.floor(Math.random() * NOTE_STYLES.length)].id,
+  }));
+}
+
 export default function NotesPage() {
   const router = useRouter();
-  const [notes, setNotes] = useState([]);
-
-  useEffect(() => {
-    const storedNotes = JSON.parse(localStorage.getItem("notes") || "[]");
-    setNotes(storedNotes);
-  }, []);
+  const [notes, setNotes] = useState(() => getInitialNotes()); // lazy state init
 
   const addNote = () => {
-    const newId = notes.length > 0 ? Math.max(...notes.map(n => n.id)) + 1 : 1;
+    const newId = notes.length > 0 ? Math.max(...notes.map((n) => n.id)) + 1 : 1;
     router.push(`/edit-note?id=${newId}&new=true`);
   };
 
   const removeNote = (id) => {
-    const updatedNotes = notes.filter(n => n.id !== id);
+    const updatedNotes = notes.filter((n) => n.id !== id);
     setNotes(updatedNotes);
     localStorage.setItem("notes", JSON.stringify(updatedNotes));
   };
 
   const previewNote = (id) => router.push(`/edit-note?id=${id}`);
-
-  const getRandomStyle = () => NOTE_STYLES[Math.floor(Math.random() * NOTE_STYLES.length)].id;
 
   return (
     <div className="flex flex-col items-center min-h-screen w-full px-4 sm:px-8 py-8 bg-[var(--color-background)] relative">
@@ -38,12 +41,15 @@ export default function NotesPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
           {notes.map((note) => (
             <div key={note.id} onClick={() => previewNote(note.id)} className="cursor-pointer">
-              <NoteCard styleId={getRandomStyle()} title={note.title || "Untitled Note"}>
+              <NoteCard styleId={note.styleId} title={note.title || "Untitled Note"}>
                 {note.content || "Click to edit..."}
               </NoteCard>
               <button
                 type="button"
-                onClick={(e) => { e.stopPropagation(); removeNote(note.id); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeNote(note.id);
+                }}
                 className="mt-2 self-end text-red-600 hover:text-red-800 font-semibold text-sm"
               >
                 Delete

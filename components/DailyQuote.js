@@ -12,8 +12,13 @@ const LIGHT_BG_COLORS = [
 ];
 
 export default function DailyQuote() {
-  const [currentQuote, setCurrentQuote] = useState(QUOTES[0]);
-  const [bgColor, setBgColor] = useState(LIGHT_BG_COLORS[0]);
+  // Initialize with a random quote and bg color
+  const [currentQuote, setCurrentQuote] = useState(() => 
+    QUOTES[Math.floor(Math.random() * QUOTES.length)]
+  );
+  const [bgColor, setBgColor] = useState(() =>
+    LIGHT_BG_COLORS[Math.floor(Math.random() * LIGHT_BG_COLORS.length)]
+  );
   const [fade, setFade] = useState(false);
 
   useEffect(() => {
@@ -21,9 +26,6 @@ export default function DailyQuote() {
       QUOTES[Math.floor(Math.random() * QUOTES.length)];
     const getRandomBg = () =>
       LIGHT_BG_COLORS[Math.floor(Math.random() * LIGHT_BG_COLORS.length)];
-
-    setCurrentQuote(getRandomQuote());
-    setBgColor(getRandomBg());
 
     const interval = setInterval(() => {
       setFade(true); // fade out
@@ -38,16 +40,11 @@ export default function DailyQuote() {
   }, []);
 
   return (
-    // Outer container with shadow, wrapping everything
     <div className="mx-auto md:mx-0 md:ml-0 md:w-1/3 rounded-2xl shadow-lg shadow-gray-300 bg-white overflow-visible">
-      {/* Inner content wrapper with padding */}
       <div className="p-4">
-        {/* Label */}
         <h2 className="text-lg md:text-xl font-semibold opacity-70 mb-2 text-center">
           Daily Quote
         </h2>
-
-        {/* Fading container */}
         <div
           className={`p-6 border-2 border-dashed border-[var(--color-muted)] rounded-2xl
             transition-all duration-500 ease-in-out text-center`}

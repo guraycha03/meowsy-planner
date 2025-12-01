@@ -1,29 +1,30 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 export default function EditNotePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const noteId = searchParams.get("id");
+  const noteId = Number(searchParams.get("id"));
 
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-
-  useEffect(() => {
+  // Lazy initializer to load note from localStorage
+  const getInitialNote = () => {
+    if (typeof window === "undefined") return { title: "", content: "" }; // SSR safety
     const storedNotes = JSON.parse(localStorage.getItem("notes") || "[]");
-    const note = storedNotes.find(n => n.id === Number(noteId));
-    if (note) {
-      setTitle(note.title);
-      setContent(note.content);
-    }
-  }, [noteId]);
+    const note = storedNotes.find((n) => n.id === noteId);
+    return note ? { title: note.title, content: note.content } : { title: "", content: "" };
+  };
+
+  const [{ title, content }, setNote] = useState(getInitialNote);
+
+  const setTitle = (t) => setNote((prev) => ({ ...prev, title: t }));
+  const setContent = (c) => setNote((prev) => ({ ...prev, content: c }));
 
   const saveNote = () => {
     const storedNotes = JSON.parse(localStorage.getItem("notes") || "[]");
-    const updatedNotes = storedNotes.filter(n => n.id !== Number(noteId));
-    updatedNotes.push({ id: Number(noteId), title, content });
+    const updatedNotes = storedNotes.filter((n) => n.id !== noteId);
+    updatedNotes.push({ id: noteId, title, content });
     localStorage.setItem("notes", JSON.stringify(updatedNotes));
     router.push("/notes");
   };
