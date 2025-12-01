@@ -1,10 +1,10 @@
 // app/edit-note/page.js
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export default function EditNotePage() {
+function EditNotePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const noteId = Number(searchParams.get("id"));
