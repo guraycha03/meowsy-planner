@@ -62,3 +62,11 @@ function EditNotePage() {
     </div>
   );
 }
+
+export default function Page() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <EditNotePage />
+    </Suspense>
+  );
+}
