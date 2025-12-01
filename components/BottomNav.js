@@ -15,7 +15,7 @@ export default function BottomNav() {
   ];
 
   return (
-    <nav className="fixed bottom-0 w-full bg-[var(--color-accent-light)] py-4 flex justify-around rounded-t-xl z-50 shadow-[0_-2px_4px_rgba(0,0,0,0.1)]">
+    <nav className="fixed bottom-0 w-full bg-[var(--color-accent-light)] py-4 flex justify-around rounded-t-xl z-50 shadow-[0_-2px_4px_rgba(0,0,0,0.1)] lg:hidden">
       {navItems.map(({ href, label, icon: Icon }) => {
         const isActive = pathname === href;
 
@@ -25,7 +25,6 @@ export default function BottomNav() {
             href={href}
             className="flex flex-col items-center relative group cursor-pointer"
           >
-            {/* Active indicator */}
             <span
               className={`absolute -top-4 w-10 h-1.5 rounded-full transition-all duration-300 ${
                 isActive
@@ -33,15 +32,11 @@ export default function BottomNav() {
                   : "bg-[var(--color-accent-light)] opacity-0 scale-x-0"
               }`}
             />
-
-            {/* Icon */}
             <Icon
               size={24}
               stroke={isActive ? "var(--color-dark-green)" : "var(--color-nav-inactive)"}
-              className="transition-colors duration-300 group-hover:stroke-[var(--color-accent-dark)]"
+              className="transition-colors duration-300 group-hover:stroke-[var(--color-dark-green)]"
             />
-
-            {/* Label */}
             <span
               className={`text-sm mt-1 transition-all duration-300 ${
                 isActive

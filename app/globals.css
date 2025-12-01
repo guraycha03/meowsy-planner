@@ -19,7 +19,8 @@
   --color-accent-light: #fff5f1;     /* very light peach for hover/subtle accents */
   --color-accent-dark: #d79a84;      /* stronger peach/matte shade for emphasis */
   --color-muted: #cab5a7;            /* matte dusty green / moss for borders / less important text */
-  --color-calendar-bg: rgb(255, 239, 234);      /* soft background for calendar */
+  --color-calendar-bg: rgb(255, 239, 234);
+  --color-green: #8fb164;
   --color-dark-green: #637e3f;
   --color-nav-inactive: #5c544d; /* darker dusty brown/peach, visible on light card */
 
@@ -189,14 +190,14 @@ button, input, textarea, select { user-select: auto; cursor: pointer; }
   background-color: var(--color-accent-light) !important;
   color: var(--color-foreground) !important;
   border-radius: 30% !important;
-  border: 1px solid var(--color-muted) !important;
+  border: 2px solid var(--color-muted) !important;
 }
 
 .react-calendar .react-calendar__tile--now abbr {
   background-color: var(--color-accent-light2) !important;
   color: var(--color-foreground) !important;
   border-radius: 30% !important;
-  border: 1px solid var(--color-muted) !important;
+  border: 2px solid var(--color-muted) !important;
 }
 
 

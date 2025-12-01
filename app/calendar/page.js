@@ -102,21 +102,34 @@ export default function CalendarPage() {
         </div>
       </div>
 
-      {/* Floating buttons at bottom-left above nav */}
+      {/* Floating buttons at bottom-right above nav */}
 <div className="fixed bottom-24 right-4 flex flex-col gap-3 z-20">
+
+  {/* Add Event */}
   <button
     onClick={() => alert("Add Event clicked!")}
-    className="bg-green-400 text-white px-4 py-2 rounded-full shadow-md hover:bg-green-500 transition"
+    className="px-5 py-2 rounded-full shadow-md font-semibold
+               text-[var(--color-text-dark)]
+               bg-[var(--color-accent-dark)]
+               hover:bg-[var(--color-accent)]
+               transition"
   >
     + Add Event
   </button>
+
+  {/* Today */}
   <button
     onClick={goToToday}
-    className="bg-orange-400 text-white px-4 py-2 rounded-full shadow-md hover:bg-orange-500 transition"
+    className="px-5 py-2 rounded-full shadow-md font-semibold
+               text-[var(--color-background)]
+               bg-[var(--color-dark-green)]
+               hover:bg-[var(--color-green)]
+               transition"
   >
     Today
   </button>
 </div>
+
 
 
 
