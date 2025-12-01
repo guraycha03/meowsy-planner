@@ -86,19 +86,30 @@ export default function CalendarPage() {
           className="w-full flex flex-col overflow-y-auto"
           style={{ maxHeight: 'calc(100vh - 140px)' }}
         >
+
+
           {months.map((monthDate, idx) => (
-            <div key={idx} className="w-full mb-12 calendar-wrapper">
-              <div className="calendar-month-title">{formatMonth(monthDate)}</div>
-              <Calendar
-                value={currentDate}
-                onClickDay={setCurrentDate}
-                activeStartDate={monthDate}
-                showNeighboringMonth={false}
-                showNavigation={false}
-                className="responsive-calendar calendar-wrapper"
-              />
-            </div>
-          ))}
+  <div key={idx} className="w-full mb-12 calendar-wrapper">
+    <div className="calendar-month-title flex flex-col">
+      <span>{formatMonth(monthDate)}</span>
+      <div
+        className="mt-2"
+        style={{ borderBottom: "2px solid var(--color-accent)" }}
+      ></div>
+    </div>
+    <Calendar
+      value={currentDate}
+      onClickDay={setCurrentDate}
+      activeStartDate={monthDate}
+      showNeighboringMonth={false}
+      showNavigation={false}
+      className="responsive-calendar calendar-wrapper"
+    />
+  </div>
+))}
+
+
+
         </div>
       </div>
 
