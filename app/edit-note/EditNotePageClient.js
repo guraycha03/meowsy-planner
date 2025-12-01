@@ -1,37 +1,35 @@
 // app/edit-note/EditNotePageClient.js
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 export default function EditNotePageClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const noteIdParam = Number(searchParams.get("id"));
 
-  const [noteId, setNoteId] = useState(null);
-  const [note, setNote] = useState({ title: "", content: "" });
-
-  useEffect(() => {
-    const id = Number(searchParams.get("id"));
-    setNoteId(id);
+  // Lazy initialize note from localStorage
+  const [note, setNote] = useState(() => {
+    if (typeof window === "undefined") return { title: "", content: "" };
 
     const storedNotes = JSON.parse(localStorage.getItem("notes") || "[]");
-    const existingNote = storedNotes.find((n) => n.id === id);
-    if (existingNote) setNote({ title: existingNote.title, content: existingNote.content });
-  }, [searchParams]);
+    const existingNote = storedNotes.find((n) => n.id === noteIdParam);
+    return existingNote ? { title: existingNote.title, content: existingNote.content } : { title: "", content: "" };
+  });
 
   const setTitle = (t) => setNote((prev) => ({ ...prev, title: t }));
   const setContent = (c) => setNote((prev) => ({ ...prev, content: c }));
 
   const saveNote = () => {
     const storedNotes = JSON.parse(localStorage.getItem("notes") || "[]");
-    const updatedNotes = storedNotes.filter((n) => n.id !== noteId);
-    updatedNotes.push({ id: noteId, ...note });
+    const updatedNotes = storedNotes.filter((n) => n.id !== noteIdParam);
+    updatedNotes.push({ id: noteIdParam, ...note });
     localStorage.setItem("notes", JSON.stringify(updatedNotes));
     router.push("/notes");
   };
 
-  if (!noteId) return null;
+  if (!noteIdParam) return null;
 
   return (
     <div className="flex flex-col items-center min-h-screen px-4 py-8 bg-[var(--color-background)]">

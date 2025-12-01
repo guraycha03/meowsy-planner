@@ -1,11 +1,8 @@
 // app/edit-note/page.js
 import dynamic from "next/dynamic";
 
-// Dynamically import the client-only component
-const EditNotePageClient = dynamic(
-  () => import("./EditNotePageClient"),
-  { ssr: false } // Disable server-side rendering
-);
+// Dynamically import the client-only page
+const EditNotePageClient = dynamic(() => import("./EditNotePageClient"), { ssr: false });
 
 export default function Page() {
   return <EditNotePageClient />;
