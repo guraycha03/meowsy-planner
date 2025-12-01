@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { QUOTES } from "../app/data/quotes";
+import { QUOTES } from "../data/quotes";
+
+
 
 const LIGHT_BG_COLORS = [
   "#fff5f1",
