@@ -19,7 +19,8 @@ export default function TopNav() {
 
   return (
     <>
-      <header className="flex justify-between items-center sticky top-0 z-10 px-4 py-2 border-b-2 border-[rgba(160,160,160,0.2)] bg-[var(--color-background)]">
+      <header className="flex justify-between items-center sticky top-0 z-[1000] px-4 py-2 border-b-2 border-[rgba(160,160,160,0.2)] bg-[var(--color-background)]">
+
         {/* Left: Logo + App name */}
         <div className="flex items-center gap-3">
           <Image src="/images/meowsy-cat.png" alt="Meowsy" width={36} height={36} />
@@ -50,7 +51,6 @@ export default function TopNav() {
             })}
           </div>
 
-
           {/* 3-dot menu always visible */}
           <button
             className="p-2 rounded-[18px] hover:bg-[var(--color-accent-light2)]"
@@ -72,12 +72,51 @@ export default function TopNav() {
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="text-xl font-bold text-[var(--color-foreground)]">Menu</h2>
-            <button className="p-2 bg-[var(--color-accent)] text-white rounded-lg hover:scale-105 transition-transform">
-              Placeholder 1
+
+            {/* Account & Profile */}
+            <button
+              className="p-2 bg-[var(--color-accent)] text-white rounded-lg hover:scale-105 transition-transform"
+              onClick={() => router.push("/profile")}
+            >
+              Profile
             </button>
-            <button className="p-2 bg-[var(--color-accent)] text-white rounded-lg hover:scale-105 transition-transform">
-              Placeholder 2
+            <button
+              className="p-2 bg-[var(--color-accent)] text-white rounded-lg hover:scale-105 transition-transform"
+              onClick={() => router.push("/account-settings")}
+            >
+              Account Settings
             </button>
+
+            {/* Export / Help */}
+            <button
+              className="p-2 bg-[var(--color-accent)] text-white rounded-lg hover:scale-105 transition-transform"
+              onClick={() => router.push("/export-backup")}
+            >
+              Export / Backup
+            </button>
+            <button
+              className="p-2 bg-[var(--color-accent)] text-white rounded-lg hover:scale-105 transition-transform"
+              onClick={() => router.push("/help")}
+            >
+              Help & FAQ
+            </button>
+            <button
+              className="p-2 bg-[var(--color-accent)] text-white rounded-lg hover:scale-105 transition-transform"
+              onClick={() => router.push("/about")}
+            >
+              About / Version
+            </button>
+            <button
+              className="p-2 bg-[var(--color-accent)] text-white rounded-lg hover:scale-105 transition-transform"
+              onClick={() => alert("Signed Out!")}
+            >
+              Sign Out
+            </button>
+
+            {/* Spacer */}
+            <div className="flex-1"></div>
+
+            {/* Preview NoteCard */}
             <button
               onClick={() => {
                 setIsPanelOpen(false);
@@ -87,8 +126,10 @@ export default function TopNav() {
             >
               Preview NoteCard
             </button>
+
+            {/* Close menu */}
             <button
-              className="mt-auto p-2 bg-gray-300 rounded-lg hover:bg-gray-400"
+              className="mt-2 p-2 bg-gray-300 rounded-lg hover:bg-gray-400"
               onClick={() => setIsPanelOpen(false)}
             >
               Close
