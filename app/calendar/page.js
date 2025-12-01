@@ -118,27 +118,21 @@ export default function CalendarPage() {
 
   {/* Add Event */}
   <button
-    onClick={() => alert("Add Event clicked!")}
-    className="px-5 py-2 rounded-full shadow-md font-semibold
-               text-[var(--color-text-dark)]
-               bg-[var(--color-accent-dark)]
-               hover:bg-[var(--color-accent)]
-               transition"
-  >
-    + Add Event
-  </button>
+  onClick={() => alert("Add Event clicked!")}
+  className="px-5 py-2 rounded-full shadow-md font-semibold text-[var(--color-text-dark)] bg-[var(--color-accent-dark)] hover:bg-[var(--color-accent)] transition"
+>
+  + Add Event
+</button>
 
-  {/* Today */}
-  <button
-    onClick={goToToday}
-    className="px-5 py-2 rounded-full shadow-md font-semibold
-               text-[var(--color-background)]
-               bg-[var(--color-dark-green)]
-               hover:bg-[var(--color-green)]
-               transition"
-  >
-    Today
-  </button>
+<button
+  onClick={goToToday}
+  className="px-5 py-2 rounded-full shadow-md font-semibold text-[var(--color-background)] bg-[var(--color-dark-green)] hover:bg-[var(--color-green)] transition"
+>
+  Today
+</button>
+
+
+
 </div>
 
 

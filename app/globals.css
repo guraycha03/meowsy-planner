@@ -211,6 +211,9 @@ button, input, textarea, select { user-select: auto; cursor: pointer; }
   .react-calendar__tile abbr { min-height: 120px; font-size: 2.5rem; }
   .calendar-month-title { font-size: 3rem; }
   .react-calendar { padding: 32px; }
+  .react-calendar__tile {
+    border-radius: 4px !important; /* smaller, subtle radius */
+  }
 }
 
 /* Stretch full width */

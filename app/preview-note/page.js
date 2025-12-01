@@ -2,7 +2,8 @@
 "use client";
 
 import NoteCard, { NOTE_STYLES } from "@/components/NoteCard";
-import { QUOTES } from "@/data/quotes";
+import { QUOTES } from "../../data/quotes";
+
 
 export default function PreviewNotePage() {
   return (
