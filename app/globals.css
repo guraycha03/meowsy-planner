@@ -207,6 +207,19 @@ button, input, textarea, select { user-select: auto; cursor: pointer; }
   .react-calendar__tile abbr { min-height: 100px; font-size: 2.2rem; }
 }
 
+/* Small screens / phones */
+@media (max-width: 767px) {
+  .react-calendar__tile abbr {
+    font-size: 1.4rem; /* smaller font for small screens */
+    min-height: 50px;   /* reduce tile height */
+  }
+
+  .calendar-month-title {
+    font-size: 1.8rem; /* optional: smaller month title */
+  }
+}
+
+
 @media (min-width: 1024px) {
   .react-calendar__tile abbr { min-height: 120px; font-size: 2.5rem; }
   .calendar-month-title { font-size: 3rem; }
@@ -215,6 +228,9 @@ button, input, textarea, select { user-select: auto; cursor: pointer; }
     border-radius: 4px !important; /* smaller, subtle radius */
   }
 }
+
+
+
 
 /* Stretch full width */
 .responsive-calendar,
