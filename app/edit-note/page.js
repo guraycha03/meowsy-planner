@@ -7,14 +7,28 @@ export default function EditNotePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Lazy initialization of state
-  const [noteId] = useState(() => Number(searchParams.get("id")));
-  const [note, setNote] = useState(() => {
-    if (typeof window === "undefined") return { title: "", content: "" };
+  const [noteId, setNoteId] = useState(null);
+  const [note, setNote] = useState({ title: "", content: "" });
+  const [isClient, setIsClient] = useState(false);
+
+  // Mark that we are on the client
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Initialize note after client render
+  useEffect(() => {
+    if (!isClient) return;
+
+    const id = Number(searchParams.get("id"));
+    setNoteId(id);
+
     const storedNotes = JSON.parse(localStorage.getItem("notes") || "[]");
-    const existingNote = storedNotes.find((n) => n.id === Number(searchParams.get("id")));
-    return existingNote ? { title: existingNote.title, content: existingNote.content } : { title: "", content: "" };
-  });
+    const existingNote = storedNotes.find((n) => n.id === id);
+    if (existingNote) {
+      setNote({ title: existingNote.title, content: existingNote.content });
+    }
+  }, [isClient, searchParams]);
 
   const setTitle = (t) => setNote((prev) => ({ ...prev, title: t }));
   const setContent = (c) => setNote((prev) => ({ ...prev, content: c }));
@@ -27,7 +41,9 @@ export default function EditNotePage() {
     router.push("/notes");
   };
 
-  // No need for useEffect to load state now, everything is initialized safely
+  // Prevent rendering on server
+  if (!isClient) return null;
+
   return (
     <div className="flex flex-col items-center min-h-screen px-4 py-8 bg-[var(--color-background)]">
       <div className="w-full max-w-[1200px] flex justify-between items-center mb-6">
