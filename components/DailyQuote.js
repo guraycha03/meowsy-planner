@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { QUOTES } from "../data/quotes";
 
 const LIGHT_BG_COLORS = [
@@ -12,8 +12,7 @@ const LIGHT_BG_COLORS = [
 ];
 
 export default function DailyQuote() {
-  // Initialize with a random quote and bg color
-  const [currentQuote, setCurrentQuote] = useState(() => 
+  const [currentQuote, setCurrentQuote] = useState(() =>
     QUOTES[Math.floor(Math.random() * QUOTES.length)]
   );
   const [bgColor, setBgColor] = useState(() =>
@@ -22,21 +21,24 @@ export default function DailyQuote() {
   const [fade, setFade] = useState(false);
 
   useEffect(() => {
-    const getRandomQuote = () =>
-      QUOTES[Math.floor(Math.random() * QUOTES.length)];
-    const getRandomBg = () =>
-      LIGHT_BG_COLORS[Math.floor(Math.random() * LIGHT_BG_COLORS.length)];
+    const getRandomQuote = () => QUOTES[Math.floor(Math.random() * QUOTES.length)];
+    const getRandomBg = () => LIGHT_BG_COLORS[Math.floor(Math.random() * LIGHT_BG_COLORS.length)];
 
-    const interval = setInterval(() => {
+    let timeoutId;
+
+    const intervalId = setInterval(() => {
       setFade(true); // fade out
-      setTimeout(() => {
+      timeoutId = setTimeout(() => {
         setCurrentQuote(getRandomQuote());
         setBgColor(getRandomBg());
         setFade(false); // fade in
       }, 500);
     }, 6000);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(intervalId);
+      clearTimeout(timeoutId); // clean up timeout
+    };
   }, []);
 
   return (
@@ -48,10 +50,7 @@ export default function DailyQuote() {
         <div
           className={`p-6 border-2 border-dashed border-[var(--color-muted)] rounded-2xl
             transition-all duration-500 ease-in-out text-center`}
-          style={{
-            backgroundColor: bgColor,
-            minHeight: "4rem",
-          }}
+          style={{ backgroundColor: bgColor, minHeight: "4rem" }}
         >
           <p
             className={`text-sm md:text-base opacity-90 italic transition-opacity duration-500 ease-in-out ${

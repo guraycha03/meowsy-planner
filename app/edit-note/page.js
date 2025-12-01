@@ -10,11 +10,12 @@ function EditNotePage() {
   const noteId = Number(searchParams.get("id"));
 
   const [note, setNote] = useState(() => {
-    if (typeof window === "undefined") return { title: "", content: "" };
-    const storedNotes = JSON.parse(localStorage.getItem("notes") || "[]");
-    const existingNote = storedNotes.find((n) => n.id === noteId);
-    return existingNote ? { title: existingNote.title, content: existingNote.content } : { title: "", content: "" };
-  });
+  if (typeof window === "undefined") return { title: "", content: "" };
+  const storedNotes = JSON.parse(localStorage.getItem("notes") || "[]");
+  const existingNote = storedNotes.find((n) => n.id === noteId);
+  return existingNote ? { title: existingNote.title, content: existingNote.content } : { title: "", content: "" };
+});
+
 
   const setTitle = (t) => setNote((prev) => ({ ...prev, title: t }));
   const setContent = (c) => setNote((prev) => ({ ...prev, content: c }));

@@ -1,74 +1,70 @@
 "use client";
 
-import { useState } from "react";
-import QuickCreateModal from "../components/QuickCreateModal";
-import NoteCard, { NOTE_STYLES } from "../components/NoteCard";
-import DailyQuote from "../components/DailyQuote";
-import GridBackground from "../components/GridBackground";
+import { useEffect, useState } from "react";
+import { QUOTES } from "../data/quotes";
 
-// Lazy initializer function for notes
-function getInitialNotes() {
-  const storedNotes = JSON.parse(localStorage.getItem("notes") || "[]");
-  return storedNotes.map((note) => ({
-    ...note,
-    styleId: note.styleId || NOTE_STYLES[Math.floor(Math.random() * NOTE_STYLES.length)].id,
-  }));
-}
+const LIGHT_BG_COLORS = [
+  "#fff5f1",
+  "#e3f0db",
+  "#fef3e7",
+  "#f0d9c4",
+  "#f7f0ff",
+];
 
-export default function HomePage() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [notes, setNotes] = useState(() => getInitialNotes()); // lazy init
+export default function DailyQuote() {
+  // Initialize with a random quote and bg color
+  const [currentQuote, setCurrentQuote] = useState(() =>
+  QUOTES[Math.floor(Math.random() * QUOTES.length)]
+);
+const [bgColor, setBgColor] = useState(() =>
+  LIGHT_BG_COLORS[Math.floor(Math.random() * LIGHT_BG_COLORS.length)]
+);
+
+ 
+  const [fade, setFade] = useState(false);
+
+  useEffect(() => {
+
+  const getRandomQuote = () => QUOTES[Math.floor(Math.random() * QUOTES.length)];
+  const getRandomBg = () => LIGHT_BG_COLORS[Math.floor(Math.random() * LIGHT_BG_COLORS.length)];
+
+  const interval = setInterval(() => {
+    setFade(true);
+    const timeout = setTimeout(() => {
+      setCurrentQuote(getRandomQuote());
+      setBgColor(getRandomBg());
+      setFade(false);
+    }, 500);
+    return () => clearTimeout(timeout);
+  }, 6000);
+
+  return () => clearInterval(interval);
+}, []);
+
+
 
   return (
-    <div className="relative min-h-screen bg-white">
-      {/* Background */}
-      <GridBackground />
-
-      {/* Main content */}
-      <div className="relative z-10 p-6 lg:p-12 max-w-full lg:max-w-[1200px] mx-auto space-y-8">
-        {/* Greeting */}
-        <h1 className="text-3xl font-bold text-[var(--color-foreground)]">
-          Welcome, Meowsy!
-        </h1>
-
-        {/* Daily Quote */}
-        <DailyQuote />
-
-        {/* Notes Section */}
-        <section>
-          <h2 className="text-xl font-semibold text-[var(--color-foreground)] mb-3">
-            Your Notes
-          </h2>
-
-          {notes.length === 0 ? (
-            <p className="text-[var(--color-muted)]">No notes yet.</p>
-          ) : (
-            <div className="grid md:grid-cols-3 gap-4">
-              {notes.map((note) => (
-                <NoteCard
-                  key={note.id}
-                  styleId={note.styleId}
-                  title={note.title || "Untitled Note"}
-                >
-                  <p className="text-[var(--color-foreground)] text-sm leading-relaxed">
-                    {note.content || "Click to edit..."}
-                  </p>
-                </NoteCard>
-              ))}
-            </div>
-          )}
-        </section>
-
-        {/* Quick Create Modal */}
-        <QuickCreateModal isOpen={isModalOpen} setIsOpen={setIsModalOpen} />
-
-        {/* Floating Add Button */}
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="fixed bottom-24 right-8 w-16 h-16 rounded-full bg-[var(--color-accent-dark)] text-white text-3xl flex items-center justify-center shadow-lg hover:scale-110 transition-transform z-20"
+    <div className="mx-auto md:mx-0 md:ml-0 md:w-1/3 rounded-2xl shadow-lg shadow-gray-300 bg-white overflow-visible">
+      <div className="p-4">
+        <h2 className="text-lg md:text-xl font-semibold opacity-70 mb-2 text-center">
+          Daily Quote
+        </h2>
+        <div
+          className={`p-6 border-2 border-dashed border-[var(--color-muted)] rounded-2xl
+            transition-all duration-500 ease-in-out text-center`}
+          style={{
+            backgroundColor: bgColor,
+            minHeight: "4rem",
+          }}
         >
-          +
-        </button>
+          <p
+            className={`text-sm md:text-base opacity-90 italic transition-opacity duration-500 ease-in-out ${
+              fade ? "opacity-0" : "opacity-90"
+            }`}
+          >
+            {currentQuote}
+          </p>
+        </div>
       </div>
     </div>
   );

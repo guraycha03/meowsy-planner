@@ -16,7 +16,7 @@ function getInitialNotes() {
 
 export default function NotesPage() {
   const router = useRouter();
-  const [notes, setNotes] = useState(() => getInitialNotes()); // lazy state init
+  const [notes, setNotes] = useState(() => getInitialNotes());
 
   const addNote = () => {
     const newId = notes.length > 0 ? Math.max(...notes.map((n) => n.id)) + 1 : 1;
