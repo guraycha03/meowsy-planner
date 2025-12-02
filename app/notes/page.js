@@ -44,16 +44,8 @@ export default function NotesPage() {
               <NoteCard styleId={note.styleId} title={note.title || "Untitled Note"}>
                 {note.content || "Click to edit..."}
               </NoteCard>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  removeNote(note.id);
-                }}
-                className="mt-2 self-end text-red-600 hover:text-red-800 font-semibold text-sm"
-              >
-                Delete
-              </button>
+              
+              
             </div>
           ))}
         </div>
