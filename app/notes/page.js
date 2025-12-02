@@ -13,7 +13,7 @@ function getInitialNotes() {
     styleId: note.styleId || NOTE_STYLES[Math.floor(Math.random() * NOTE_STYLES.length)].id,
   }));
 }
-
+ 
 export default function NotesPage() {
   const router = useRouter();
   const [notes, setNotes] = useState(() => getInitialNotes());

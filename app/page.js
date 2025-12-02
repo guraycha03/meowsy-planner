@@ -12,13 +12,9 @@ const LIGHT_BG_COLORS = [
 ];
 
 export default function DailyQuote() {
-  // Initialize with a random quote and bg color
-  const [currentQuote, setCurrentQuote] = useState(() =>
-  QUOTES[Math.floor(Math.random() * QUOTES.length)]
-);
-const [bgColor, setBgColor] = useState(() =>
-  LIGHT_BG_COLORS[Math.floor(Math.random() * LIGHT_BG_COLORS.length)]
-);
+  // Initialize with a fixed quote and bg color for SSR consistency
+  const [currentQuote, setCurrentQuote] = useState(QUOTES[0]);
+  const [bgColor, setBgColor] = useState(LIGHT_BG_COLORS[0]);
 
  
   const [fade, setFade] = useState(false);
