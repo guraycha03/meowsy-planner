@@ -1,9 +1,5 @@
 
-
 // app/layout.js
-
-
-
 
 import "./globals.css";
 import TopNav from "../components/TopNav";
