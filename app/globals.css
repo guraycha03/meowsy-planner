@@ -272,9 +272,9 @@ button, input, textarea, select { user-select: auto; cursor: pointer; }
 /* NOTE PAGE */
 
 .daily-quote-container {
-  display: flex;           /* enable flex layout */
-  justify-content: center; /* horizontal center */
-  align-items: center;     /* vertical center */
+  display: flex;           
+  justify-content: center; 
+  align-items: center;     
   text-align: center;      /* ensure text itself is centered */
   width: 100%;             /* full width up to max-width */
   max-width: 600px;        /* constrain width on very wide screens */
@@ -283,7 +283,7 @@ button, input, textarea, select { user-select: auto; cursor: pointer; }
   border: 2px dashed var(--color-muted);
   border-radius: 1rem;
   min-height: 4rem;
-  background-color: var(--color-accent-light); /* temporary, replaced dynamically in React */
+  background-color: var(--color-accent-light); 
   transition: all 0.5s ease-in-out;
 }
 
