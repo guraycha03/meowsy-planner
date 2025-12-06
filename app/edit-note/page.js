@@ -1,158 +1,180 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Trash2 } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
+import { doc, setDoc, deleteDoc, serverTimestamp, onSnapshot } from "firebase/firestore";
+import { db } from "../../lib/firebase";
+import NoticePopup from "../../components/NoticePopup";
 
-function EditNotePage() {
+export default function EditNotePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const noteId = Number(searchParams.get("id"));
-  const isNewNote = searchParams.get("new");
+  const noteId = searchParams.get("id");
+  const isNew = searchParams.get("new") === "true";
 
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const { user } = useAuth();
+  const [note, setNote] = useState({ title: "", content: "" });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [notice, setNotice] = useState({ type: "", message: "" });
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
-  const [note, setNote] = useState(() => {
-    if (typeof window === "undefined") return { title: "", content: "" };
-    const storedNotes = JSON.parse(localStorage.getItem("notes") || "[]");
-    const existing = storedNotes.find((n) => n.id === noteId);
-    return existing ? { title: existing.title, content: existing.content } : { title: "", content: "" };
-  });
+  // Load note
+  useEffect(() => {
+    if (!noteId) {
+      router.replace("/notes");
+      return;
+    }
+    if (!user) return;
+    if (isNew) {
+      setLoading(false);
+      return;
+    }
 
-  const setTitle = (t) => setNote((prev) => ({ ...prev, title: t }));
-  const setContent = (c) => setNote((prev) => ({ ...prev, content: c }));
+    const ref = doc(db, "users", user.uid, "notes", noteId);
+    const unsubscribe = onSnapshot(
+      ref,
+      (snap) => {
+        if (snap.exists()) {
+          setNote(snap.data());
+        } else {
+          router.replace("/notes");
+        }
+        setLoading(false);
+      },
+      (err) => {
+        console.error(err);
+        setNotice({ type: "error", message: "Failed to load note." });
+        setLoading(false);
+      }
+    );
 
-  const saveNote = () => {
-    const storedNotes = JSON.parse(localStorage.getItem("notes") || "[]");
-    const updated = storedNotes.filter((n) => n.id !== noteId);
-    updated.push({ id: noteId, ...note });
-    localStorage.setItem("notes", JSON.stringify(updated));
-    router.push("/notes");
+    return () => unsubscribe();
+  }, [user, noteId, isNew, router]);
+
+  if (!user || loading)
+    return (
+      <div className="p-6 text-center text-xl text-[var(--color-accent)] font-semibold">
+        Loading Note...
+      </div>
+    );
+
+  // Save note
+  const saveNote = async () => {
+    if (!user || !noteId || saving) return;
+    if (!note.title.trim() && !note.content.trim()) {
+      setNotice({ type: "warning", message: "Note is empty. Add title or content." });
+      return;
+    }
+
+    setSaving(true);
+
+    const ref = doc(db, "users", user.uid, "notes", noteId);
+    const dataToSave = {
+      title: note.title,
+      content: note.content,
+      updatedAt: serverTimestamp(),
+      ...(isNew && { createdAt: serverTimestamp() }),
+    };
+
+    try {
+      setDoc(ref, dataToSave, { merge: true }).catch((err) => console.error(err));
+      setNotice({ type: "success", message: "Note Saved! 🎉" });
+      setTimeout(() => router.push("/notes"), 500);
+    } catch (err) {
+      console.error(err);
+      setNotice({ type: "error", message: "Failed to save note." });
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const confirmDelete = () => setShowDeleteModal(true);
-
-  const deleteNote = () => {
-    const storedNotes = JSON.parse(localStorage.getItem("notes") || "[]");
-    const updated = storedNotes.filter((n) => n.id !== noteId);
-    localStorage.setItem("notes", JSON.stringify(updated));
-    router.push("/notes");
+  // Delete note
+  const handleDeleteClick = () => {
+    if (isNew) {
+      router.replace("/notes");
+    } else {
+      setConfirmDelete(true);
+    }
   };
 
-  if (!noteId) return null;
+  const confirmDeleteNote = async () => {
+    try {
+      const ref = doc(db, "users", user.uid, "notes", noteId);
+      await deleteDoc(ref);
+      setNotice({ type: "success", message: "Note deleted successfully." });
+      setTimeout(() => router.push("/notes"), 500);
+    } catch (err) {
+      console.error(err);
+      setNotice({ type: "error", message: "Failed to delete note." });
+    } finally {
+      setConfirmDelete(false);
+    }
+  };
 
   return (
-    <div className="flex flex-col items-center min-h-screen px-4 py-8 bg-[var(--color-background)]">
+    <div className="flex flex-col items-center min-h-screen w-full px-4 py-8 bg-[var(--color-background)]">
+      {/* Buttons */}
+      <div className="w-full max-w-[1200px] flex items-center justify-between mb-6">
+        <button
+          onClick={isNew ? handleDeleteClick : () => router.replace("/notes")}
+          className="p-3 rounded-xl bg-white border shadow-md hover:scale-[1.05] transition"
+        >
+          <ArrowLeft className="w-6 h-6 opacity-70" />
+        </button>
 
-      {/* Top Bar */}
-      {/* Top Bar */}
-<div className="w-full max-w-[1200px] flex items-center justify-between mb-6">
+        <div className="flex gap-3 items-center">
+          {!isNew && (
+            <button
+              onClick={handleDeleteClick}
+              className="p-3 rounded-xl bg-red-100 border border-red-300 shadow-md hover:scale-[1.05] transition"
+            >
+              <Trash2 className="w-6 h-6 text-red-500" />
+            </button>
+          )}
+          <button
+            onClick={saveNote}
+            disabled={saving}
+            className={`px-6 py-3 rounded-xl font-semibold shadow-md transition-all duration-200 ${
+              saving
+                ? "bg-[var(--color-muted)] text-[var(--color-background)] cursor-not-allowed"
+                : "bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-dark)] hover:scale-[1.03] active:scale-[0.98]"
+            }`}
+          >
+            {saving ? "Saving..." : "Save"}
+          </button>
+        </div>
+      </div>
 
-  {/* BACK BUTTON (left) */}
-  <button
-    onClick={() => router.push("/notes")}
-    className="
-      p-3 rounded-xl 
-      bg-[var(--color-accent-light)] 
-      border border-[var(--color-muted)] 
-      shadow-sm 
-      hover:shadow-md hover:scale-[1.03] 
-      transition-all duration-200
-    "
-  >
-    <ArrowLeft className="w-6 h-6 opacity-70" />
-  </button>
+      {/* Floating Notice Popup */}
+      {notice.message && (
+        <NoticePopup
+          id={`notice-${notice.type}`}
+          type={notice.type}
+          message={notice.message}
+          duration={2000}
+          onClose={() => setNotice({ type: "", message: "" })}
+        />
+      )}
 
-  {/* RIGHT ACTION GROUP */}
-  <div className="flex items-center gap-3">
-    {/* DELETE BUTTON (only for existing notes) */}
-    {!isNewNote && (
-      <button
-        onClick={confirmDelete}
-        className="
-          p-3 rounded-xl 
-          bg-red-50 
-          border border-red-200 
-          shadow-sm 
-          hover:shadow-md hover:scale-[1.03] 
-          transition-all duration-200
-        "
-      >
-        <Trash2 className="w-6 h-6 text-red-400 opacity-80" />
-      </button>
-    )}
-
-    {/* SAVE BUTTON */}
-    <button
-      onClick={saveNote}
-      className="
-        px-6 py-3 rounded-xl 
-        bg-[var(--color-accent)] 
-        text-white font-semibold 
-        hover:bg-[var(--color-accent-dark)] 
-        transition
-      "
-    >
-      Save
-    </button>
-  </div>
-</div>
-
-
-      {/* NOTE TITLE */}
-      {/* NOTE TITLE */}
-<input
-  type="text"
-  placeholder="Title"
-  value={note.title}
-  onChange={(e) => setTitle(e.target.value)}
-  className="
-    w-full max-w-[1200px] p-4 mb-4 text-lg font-bold font-[var(--font-sans)]
-    rounded-xl border-2 border-[var(--color-muted)]
-    bg-white/60
-    focus:border-[var(--color-accent)] focus:bg-white
-    outline-none transition-all duration-200
-    placeholder:opacity-60
-  "
-/>
-
-{/* NOTE CONTENT */}
-<textarea
-  placeholder="Write your note here..."
-  value={note.content}
-  onChange={(e) => setContent(e.target.value)}
-  className="
-    w-full max-w-[1200px] p-4 h-64 font-[var(--font-sans)]
-    rounded-xl border-2 border-[var(--color-muted)]
-    bg-white/60 resize-none
-    focus:border-[var(--color-accent)] focus:bg-white
-    outline-none transition-all duration-200
-    placeholder:opacity-60
-  "
-/>
-
-      
       {/* Delete Confirmation Modal */}
-      {showDeleteModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-2xl shadow-xl border border-[var(--color-muted)] w-[90%] max-w-md text-center">
-            <h2 className="text-lg font-semibold mb-4 text-[var(--color-text-dark)]">
-              Delete this note?
-            </h2>
-            <p className="text-sm opacity-80 mb-6">
-              This action cannot be undone.
-            </p>
-
-            <div className="flex justify-center gap-4">
+      {confirmDelete && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl p-6 w-[90%] max-w-md shadow-lg flex flex-col gap-4">
+            <h2 className="text-lg font-bold">Delete Note?</h2>
+            <p className="text-gray-600">This action cannot be undone. Are you sure?</p>
+            <div className="flex justify-end gap-3 mt-4">
               <button
-                onClick={() => setShowDeleteModal(false)}
-                className="px-4 py-2 rounded bg-[var(--color-accent-light)] border border-[var(--color-muted)]"
+                onClick={() => setConfirmDelete(false)}
+                className="px-4 py-2 rounded-xl border shadow hover:bg-gray-100 transition"
               >
                 Cancel
               </button>
               <button
-                onClick={deleteNote}
-                className="px-4 py-2 rounded bg-red-500 text-white hover:bg-red-600"
+                onClick={confirmDeleteNote}
+                className="px-4 py-2 rounded-xl bg-red-500 text-white shadow hover:bg-red-600 transition"
               >
                 Delete
               </button>
@@ -160,14 +182,21 @@ function EditNotePage() {
           </div>
         </div>
       )}
-    </div>
-  );
-}
 
-export default function Page() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <EditNotePage />
-    </Suspense>
+      {/* Inputs */}
+      <input
+        type="text"
+        placeholder="Title"
+        value={note.title}
+        onChange={(e) => setNote((n) => ({ ...n, title: e.target.value }))}
+        className="w-full max-w-[1200px] p-4 mb-4 text-2xl font-extrabold rounded-xl border-2 border-[var(--color-muted)] bg-white/60 focus:border-[var(--color-accent)] outline-none"
+      />
+      <textarea
+        placeholder="Write your note here..."
+        value={note.content}
+        onChange={(e) => setNote((n) => ({ ...n, content: e.target.value }))}
+        className="w-full max-w-[1200px] p-4 flex-1 min-h-[50vh] rounded-xl border-2 border-[var(--color-muted)] bg-white/60 resize-none focus:border-[var(--color-accent)] outline-none text-lg"
+      />
+    </div>
   );
 }

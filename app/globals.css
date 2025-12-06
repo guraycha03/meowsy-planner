@@ -19,7 +19,9 @@
   --color-accent2: #c2eaa7;  
   --color-accent-light2: #e3f0db;
   --color-accent-light: #fff5f1;     /* very light peach for hover/subtle accents */
-  --color-accent-dark: #d79a84;      /* stronger peach/matte shade for emphasis */
+  --color-accent-dark: #d79a84;      
+  --color-accent-dark2: #b27665;
+
   --color-muted: #cab5a7;            /* matte dusty green / moss for borders / less important text */
   --color-calendar-bg: rgb(255, 239, 234);
   --color-green: #8fb164;
@@ -285,6 +287,14 @@ button, input, textarea, select { user-select: auto; cursor: pointer; }
   transition: all 0.5s ease-in-out;
 }
 
+@keyframes slideUp {
+  0% { opacity: 0; transform: translate(-50%, 50%); }
+  100% { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
+}
 
 
 

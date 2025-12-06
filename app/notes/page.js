@@ -1,70 +1,71 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import NoteCard, { NOTE_STYLES } from "../../components/NoteCard";
+import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
+import { db } from "../../lib/firebase";
+import { useAuth } from "../../context/AuthContext";
+import { Plus } from "lucide-react";
 
-// Lazy initializer function for notes
-function getInitialNotes() {
-  if (typeof window === "undefined") return []; // SSR safety
-  const storedNotes = JSON.parse(localStorage.getItem("notes") || "[]");
-  return storedNotes.map((note) => ({
-    ...note,
-    styleId: note.styleId || NOTE_STYLES[Math.floor(Math.random() * NOTE_STYLES.length)].id,
-  }));
-}
- 
 export default function NotesPage() {
   const router = useRouter();
-  const [notes, setNotes] = useState(() => getInitialNotes());
+  const { user } = useAuth();
+  const [notes, setNotes] = useState([]);
 
-  const addNote = () => {
-    const newId = notes.length > 0 ? Math.max(...notes.map((n) => n.id)) + 1 : 1;
-    router.push(`/edit-note?id=${newId}&new=true`);
-  };
+  useEffect(() => {
+    if (!user) return;
 
-  const removeNote = (id) => {
-    const updatedNotes = notes.filter((n) => n.id !== id);
-    setNotes(updatedNotes);
-    localStorage.setItem("notes", JSON.stringify(updatedNotes));
-  };
+    const ref = collection(db, "users", user.uid, "notes");
+    const q = query(ref, orderBy("updatedAt", "desc"));
 
-  const previewNote = (id) => router.push(`/edit-note?id=${id}`);
+    const unsub = onSnapshot(q, (snapshot) => {
+      const list = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setNotes(list);
+    });
+
+    return () => unsub();
+  }, [user]);
 
   return (
-    <div className="flex flex-col items-center min-h-screen w-full px-4 sm:px-8 py-8 bg-[var(--color-background)] relative">
-      <header className="fixed top-12 left-1/2 -translate-x-1/2 inline-block px-6 py-3 text-[1rem] font-semibold text-[var(--color-dark-green)] bg-[var(--color-accent-light)] border-2 border-dashed border-[var(--color-muted)] rounded-b-[28px] shadow-[0_6px_16px_rgba(0,0,0,0.08)] z-9">
-        Notes
-      </header>
+    <div className="p-6 max-w-2xl mx-auto">
 
-      <div className="mt-24 flex flex-col items-center w-full max-w-[1200px]">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
-          {notes.map((note) => (
-            <div key={note.id} onClick={() => previewNote(note.id)} className="cursor-pointer">
-              <NoteCard styleId={note.styleId} title={note.title || "Untitled Note"}>
-                {note.content || "Click to edit..."}
-              </NoteCard>
-              
-              
-            </div>
-          ))}
-        </div>
-
-        {notes.length === 0 && (
-          <div className="flex flex-col items-center mt-12 text-[var(--color-muted)]">
-            <p>No notes yet. Click + Add Note to create one.</p>
-          </div>
-        )}
-      </div>
-
-      {/* Floating Add Note Button */}
+      {/* Add Note */}
       <button
-        type="button"
-        onClick={addNote}
-        className="fixed bottom-24 right-8 px-6 py-4 rounded-full font-semibold shadow-lg text-white bg-[var(--color-accent)] hover:bg-[var(--color-accent-dark)] transition z-10"
+        onClick={() => {
+          const id = crypto.randomUUID();
+          router.push(`/edit-note?id=${id}&new=true`);
+        }}
+        className="fixed bottom-24 right-6 z-[200] bg-[var(--color-accent)] text-white p-4 rounded-full shadow-lg hover:scale-105 transition"
       >
-        + Add Note
+        <Plus className="w-6 h-6" />
       </button>
+
+      <h1 className="text-3xl font-bold mb-6">My Notes</h1>
+
+      {/* Notes List */}
+      <div className="space-y-4">
+        {notes.length === 0 && (
+          <p className="text-gray-500 text-center mt-20">
+            You have no notes yet. Tap the + button to create one.
+          </p>
+        )}
+
+        {notes.map((note) => (
+          <div
+            key={note.id}
+            onClick={() => router.push(`/edit-note?id=${note.id}`)}
+            className="p-4 bg-white rounded-xl border shadow-sm hover:shadow-md cursor-pointer transition"
+          >
+            <h2 className="font-bold text-xl">{note.title || "(Untitled)"}</h2>
+            <p className="text-gray-600 text-sm mt-1 line-clamp-2">
+              {note.content || "No content..."}
+            </p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

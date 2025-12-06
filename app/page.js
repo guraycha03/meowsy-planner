@@ -4,32 +4,44 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import NoteCard, { NOTE_STYLES } from "../components/NoteCard";
 import { QUOTES } from "../data/quotes";
+import { useAuth } from "../context/AuthContext";
+import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
+import { db } from "../lib/firebase";
+import { useRouter } from "next/navigation";
 
 const LIGHT_BG_COLORS = ["#fff5f1", "#e3f0db", "#fef3e7", "#f0d9c4", "#f7f0ff"];
 
 export default function HomePage() {
+  const { user } = useAuth();
+  const router = useRouter();
+
   const [notes, setNotes] = useState([]);
-  const [isClient, setIsClient] = useState(false); // Track client mount
+  const [isClient, setIsClient] = useState(false);
   const [currentQuote, setCurrentQuote] = useState(QUOTES[0]);
   const [bgColor, setBgColor] = useState(LIGHT_BG_COLORS[0]);
   const [fade, setFade] = useState(false);
 
-  // Only run on client
-  /* eslint-disable react-hooks/set-state-in-effect */
-useEffect(() => {
-  setIsClient(true);
-  const stored = JSON.parse(localStorage.getItem("notes") || "[]");
-  setNotes(
-    stored.map((note) => ({
-      ...note,
-      styleId:
-        note.styleId || NOTE_STYLES[Math.floor(Math.random() * NOTE_STYLES.length)].id,
-    }))
-  );
-}, []);
+  // Firestore: Real-time notes fetching
+  useEffect(() => {
+    if (!user) return;
+    setIsClient(true);
 
+    const notesRef = collection(db, "users", user.uid, "notes");
+    const q = query(notesRef, orderBy("updatedAt", "desc"));
 
-  // Daily Quote rotation (client only)
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const list = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        styleId: doc.data().styleId || NOTE_STYLES[Math.floor(Math.random() * NOTE_STYLES.length)].id,
+      }));
+      setNotes(list);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+
+  // Daily Quote rotation
   useEffect(() => {
     const getRandomQuote = () => QUOTES[Math.floor(Math.random() * QUOTES.length)];
     const getRandomBg = () => LIGHT_BG_COLORS[Math.floor(Math.random() * LIGHT_BG_COLORS.length)];
@@ -47,11 +59,10 @@ useEffect(() => {
     return () => clearInterval(interval);
   }, []);
 
-  if (!isClient) return null; // Render nothing on server to avoid hydration mismatch
+  if (!isClient) return null;
 
   return (
     <div className="w-full px-4 py-12 flex flex-col md:flex-row md:items-start md:gap-8 lg:gap-16">
-
       {/* Welcome Section */}
       <div
         className="flex flex-col items-center md:items-center gap-4 p-6 bg-white shadow-lg"
@@ -62,7 +73,7 @@ useEffect(() => {
         }}
       >
         <h2 className="text-2xl md:text-3xl font-bold opacity-80 text-center">
-          Welcome Back!
+          Welcome Back{user?.displayName ? `, ${user.displayName}` : user?.email ? `, ${user.email}` : ""}!
         </h2>
         <div className="flex justify-center w-full">
           <Image
@@ -78,7 +89,12 @@ useEffect(() => {
         <div className="mt-6 w-full flex flex-col gap-4">
           {notes.length > 0 ? (
             notes.map((note) => (
-              <NoteCard key={note.id} styleId={note.styleId} title={note.title || "Untitled Note"}>
+              <NoteCard
+                key={note.id}
+                styleId={note.styleId}
+                title={note.title || "Untitled Note"}
+                onClick={() => router.push(`/edit-note?id=${note.id}`)}
+              >
                 {note.content || "Click to edit..."}
               </NoteCard>
             ))
@@ -93,9 +109,7 @@ useEffect(() => {
       </div>
 
       {/* Daily Quote Section */}
-      <div
-        className="flex justify-center w-full md:w-1/2 mt-8 md:mt-0"
-      >
+      <div className="flex justify-center w-full md:w-1/2 mt-8 md:mt-0">
         <div
           className="w-full p-6 shadow-lg flex flex-col items-center"
           style={{
