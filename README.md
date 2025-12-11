@@ -14,8 +14,10 @@ pnpm dev
 bun dev
 
 
-# dependencies i installed
+# package/dependencies I installed
 npm install react-draggable
+
+npm install uuid
 
 ```
 
