@@ -1,107 +1,134 @@
-// components/Sticker.js
+// components/Sticker.js - FIXED FOR STICKER SIZE AWARENESS
 
 "use client";
 
-import { useState, useRef } from "react";
-import Image from "next/image"; 
+import { useState, useRef, useEffect } from "react"; 
+import Image from "next/image";
 
-export default function Sticker({ src, id, initialX = 50, initialY = 50, onStopDrag }) {
-  const [position, setPosition] = useState({ x: initialX, y: initialY });
-  const [isDragging, setIsDragging] = useState(false); 
-  
-  const stickerRef = useRef(null);
-  const offset = useRef({ x: 0, y: 0 });
+// Reduced sticker size for calculation (used 50 in previous context)
+const STICKER_SIZE = 50; 
 
-  // Start drag (handles both mouse and touch down events)
-  const handlePointerDown = (e) => {
-    // Prevent default touch behavior (like scrolling)
-    if (e.pointerType === 'touch') { 
-        e.stopPropagation();
-        e.preventDefault();
-    }
-    
-    setIsDragging(true); 
-    
-    // Determine current client coordinates
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+export default function Sticker({ 
+    id, 
+    src, 
+    initialXPercent = 0.1, 
+    initialYPercent = 0.1, 
+    onDragStop, 
+    stickerSize = STICKER_SIZE // Use prop if passed, otherwise default
+}) {
+  const stickerRef = useRef(null);
+  const dragging = useRef(false);
+  const offset = useRef({ x: 0, y: 0 });
+  const containerRef = useRef(null); 
 
-    const rect = stickerRef.current.getBoundingClientRect();
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+  const posRef = useRef(pos); 
+  
+  useEffect(() => {
+    posRef.current = pos;
+  }, [pos]);
 
-    // Calculate the offset (where the user grabbed the sticker relative to its top-left corner)
-    offset.current = {
-      x: clientX - rect.left,
-      y: clientY - rect.top,
-    };
-    
-    // 🌟 FIX: Bind events to the document so dragging continues even if cursor leaves the sticker 🌟
-    document.addEventListener("pointermove", handlePointerMove);
-    document.addEventListener("pointerup", handlePointerUp);
-    document.addEventListener("touchmove", handlePointerMove, { passive: false });
-    document.addEventListener("touchend", handlePointerUp);
-  };
 
-  // Dragging
-  const handlePointerMove = (e) => {
-    if (!isDragging) return; 
-    
-    if (e.pointerType === 'touch') { 
-        e.stopPropagation();
-        e.preventDefault();
-    }
+  // --- Calculate Initial Position and Handle Container Resize ---
+  useEffect(() => {
+    const container = document.getElementById("note-area");
+    containerRef.current = container;
 
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    if (!container) return;
 
-    // Calculate new position based on cursor and offset
-    const newX = clientX - offset.current.x;
-    const newY = clientY - offset.current.y;
+    const calculatePosition = () => {
+      // Calculate maximum pixel bounds where the sticker's top-left corner can be
+      const maxClientWidth = container.clientWidth - stickerSize;
+      const maxClientHeight = container.clientHeight - stickerSize;
 
-    setPosition({ x: newX, y: newY });
-  };
+      setPos({
+        // Calculate position based on saved percentage * max available space
+        x: initialXPercent * maxClientWidth,
+        y: initialYPercent * maxClientHeight,
+      });
+    };
 
-  // Stop drag
-  const handlePointerUp = () => {
-    if (!isDragging) return;
-    
-    setIsDragging(false);
-    
-    if (onStopDrag) {
-      onStopDrag(id, position.x, position.y);
-    }
-    
-    // Cleanup event listeners
-    document.removeEventListener("pointermove", handlePointerMove);
-    document.removeEventListener("pointerup", handlePointerUp);
-    document.removeEventListener("touchmove", handlePointerMove);
-    document.removeEventListener("touchend", handlePointerUp);
-  };
+    calculatePosition();
 
-  return (
-    <div
-        ref={stickerRef}
-        onPointerDown={handlePointerDown} 
-        style={{
-            position: "absolute",
-            left: position.x,
-            top: position.y,
-            width: 80, 
-            height: 80, 
-            cursor: isDragging ? "grabbing" : "grab",
-            userSelect: "none",
-            zIndex: isDragging ? 999 : 10, // Control zIndex via state
-            touchAction: "none", // Critical for mobile to prevent scroll on drag
-            transition: isDragging ? "none" : "transform 0.1s ease-out", 
-            transform: isDragging ? "scale(1.05)" : "scale(1)", 
-        }}
-    >
-      <Image 
-        src={src}
-        alt="sticker"
-        width={80}  
-        height={80} 
-        draggable="false" // Prevent native image drag
-      />
-    </div>
-  );
+    // Listen for container resizing
+    const observer = new ResizeObserver(calculatePosition);
+    observer.observe(container);
+
+    return () => {
+      observer.unobserve(container);
+    };
+
+  }, [initialXPercent, initialYPercent, stickerSize]); 
+
+
+  // --- Drag Logic ---
+
+  const onMouseUp = () => {
+    dragging.current = false;
+    document.removeEventListener("mousemove", onMouseMove);
+    document.removeEventListener("mouseup", onMouseUp);
+
+    if (onDragStop) {
+      // Pass the current pixel coordinates to the parent
+      onDragStop(id, posRef.current.x, posRef.current.y);
+    }
+  };
+
+  const onMouseDown = (e) => {
+    e.preventDefault();
+    dragging.current = true;
+
+    const rect = stickerRef.current.getBoundingClientRect();
+    offset.current = {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    };
+
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+  };
+
+  const onMouseMove = (e) => {
+    if (!dragging.current || !containerRef.current) return;
+
+    const bounds = containerRef.current.getBoundingClientRect();
+
+    let newX = e.clientX - bounds.left - offset.current.x;
+    let newY = e.clientY - bounds.top - offset.current.y;
+
+    // Recalculate max boundaries on the fly
+    const maxX = bounds.width - stickerSize;
+    const maxY = bounds.height - stickerSize;
+
+    newX = Math.max(0, Math.min(newX, maxX));
+    newY = Math.max(0, Math.min(newY, maxY));
+
+    setPos({ x: newX, y: newY });
+  };
+  
+  // --- Render ---
+
+  return (
+    <div
+      ref={stickerRef}
+      onMouseDown={onMouseDown}
+      className="absolute cursor-grab active:cursor-grabbing select-none"
+      style={{
+        left: pos.x,
+        top: pos.y,
+        zIndex: 50,
+        width: stickerSize,
+        height: stickerSize,
+      }}
+    >
+      <Image
+        src={src}
+        alt="sticker"
+        width={stickerSize}
+        height={stickerSize}
+        draggable={false}
+        className="w-full h-full"
+      />
+    </div>
+  );
 }
