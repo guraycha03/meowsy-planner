@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { Trash2, Save } from "lucide-react"; // ShadCN / lucide-react icons
 import GridBackground from "../../components/GridBackground";
+import StickerContainer from "../../components/StickerContainer"; // <-- add this
 
 export default function EditNotePage() {
   const params = useSearchParams();

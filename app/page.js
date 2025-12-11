@@ -29,40 +29,42 @@ export default function HomePage() {
     "Time to organize your thoughts!"
   ];
 
-  const [welcomeMessage, setWelcomeMessage] = useState("");
+  const [welcomeMessage] = useState(() => {
+  const randomIndex = Math.floor(Math.random() * WELCOME_MESSAGES.length);
+  return WELCOME_MESSAGES[randomIndex];
+});
 
-  // Random welcome message and initial quote
-  useEffect(() => {
-    const randomWelcomeIndex = Math.floor(Math.random() * WELCOME_MESSAGES.length);
-    const randomQuoteIndex = Math.floor(Math.random() * QUOTES.length);
-    setWelcomeMessage(WELCOME_MESSAGES[randomWelcomeIndex]);
-    setCurrentQuote(QUOTES[randomQuoteIndex]);
-  }, []);
+const [currentQuote, setCurrentQuote] = useState(() => {
+  const randomIndex = Math.floor(Math.random() * QUOTES.length);
+  return QUOTES[randomIndex];
+});
 
-  // SSR fix
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+const [notes, setNotes] = useState([]);
+const [bgColor, setBgColor] = useState(LIGHT_BG_COLORS[0]);
 
-  // Load notes
-  useEffect(() => {
-    if (!isClient || !user) return;
+useEffect(() => {
+  if (!user) return;
+
+  const timer = setTimeout(() => {
     const allNotes = getAllNotes(user.id);
     setNotes(allNotes);
-  }, [isClient, user]);
+  }, 0);
 
-  // Quote animation
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setFade(true);
-      setTimeout(() => {
-        setCurrentQuote(QUOTES[Math.floor(Math.random() * QUOTES.length)]);
-        setBgColor(LIGHT_BG_COLORS[Math.floor(Math.random() * LIGHT_BG_COLORS.length)]);
-        setFade(false);
-      }, 500);
-    }, 7000);
-    return () => clearInterval(interval);
-  }, []);
+  return () => clearTimeout(timer);
+}, [user]);
+
+useEffect(() => {
+  const interval = setInterval(() => {
+    setFade(true);
+    setTimeout(() => {
+      setCurrentQuote(QUOTES[Math.floor(Math.random() * QUOTES.length)]);
+      setBgColor(LIGHT_BG_COLORS[Math.floor(Math.random() * LIGHT_BG_COLORS.length)]);
+      setFade(false);
+    }, 500);
+  }, 7000);
+  return () => clearInterval(interval);
+}, []);
+
 
   if (!isClient) return null;
 
