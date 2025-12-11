@@ -1,16 +1,12 @@
 // app/layout.js
-
-
 "use client";
-
 
 import "./globals.css";
 import { Quicksand, Patrick_Hand } from "next/font/google";
 import { AuthProvider } from "../context/AuthContext";
-import AuthWrapper from "../components/AuthWrapper";
+import { usePathname } from "next/navigation";
 import TopNav from "../components/TopNav";
 import BottomNav from "../components/BottomNav";
-import { usePathname } from "next/navigation";
 
 const quicksand = Quicksand({
   subsets: ["latin"],
@@ -25,32 +21,22 @@ const patrickHand = Patrick_Hand({
 });
 
 export default function RootLayout({ children }) {
-  return (
-    <html lang="en">
-      <body
-        className={`antialiased flex flex-col min-h-screen bg-[var(--color-background)] text-[var(--color-foreground)] ${quicksand.variable} ${patrickHand.variable} tracking-wide`}
-      >
-        <AuthProvider>
-          <AuthWrapper>
-            <LayoutWrapper>{children}</LayoutWrapper>
-          </AuthWrapper>
-        </AuthProvider>
-      </body>
-    </html>
-  );
-}
-
-// Inner wrapper to handle conditional top/bottom nav
-function LayoutWrapper({ children }) {
   const pathname = usePathname();
-  const hideNavPages = ["/login", "/signup"]; // pages where nav should be hidden
+
+  // Pages where we hide TopNav and BottomNav
+  const hideNavPages = ["/login", "/signup"];
+
   const showNav = !hideNavPages.includes(pathname);
 
   return (
-    <>
-      {showNav && <TopNav />}
-      <main className="flex-1">{children}</main>
-      {showNav && <BottomNav />}
-    </>
+    <html lang="en">
+      <body className={`${quicksand.variable} ${patrickHand.variable} font-sans`}>
+        <AuthProvider>
+          {showNav && <TopNav />}
+          <main className="flex-1">{children}</main>
+          {showNav && <BottomNav />}
+        </AuthProvider>
+      </body>
+    </html>
   );
 }

@@ -1,12 +1,11 @@
 "use client";
 
+import { useAuth } from "../context/AuthContext";
 import { useRouter } from "next/navigation";
-import { signOut } from "firebase/auth";
-import { auth } from "../lib/firebase"; // your Firebase config
-
 
 export default function SidePanel({ isOpen, onClose }) {
   const router = useRouter();
+  const { logout } = useAuth(); // use AuthContext logout
 
   if (!isOpen) return null;
 
@@ -57,19 +56,14 @@ export default function SidePanel({ isOpen, onClose }) {
 
         {/* Logout button */}
         <button
-        className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-transform"
-        onClick={async () => {
-          try {
-            await signOut(auth); // actually log out
+          className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-transform"
+          onClick={() => {
+            logout();           // call your AuthContext logout
             router.push("/login"); // redirect after logout
-          } catch (err) {
-            console.error("Failed to log out:", err);
-          }
-        }}
-      >
-        Log Out
-      </button>
-
+          }}
+        >
+          Log Out
+        </button>
 
         {/* Spacer */}
         <div className="flex-1"></div>

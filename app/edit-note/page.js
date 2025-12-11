@@ -1,202 +1,121 @@
 "use client";
 
+import { useSearchParams, useRouter } from "next/navigation";
+import { getNote, updateNote, deleteNote } from "../../lib/localNotes";
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, Trash2 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
-import { doc, setDoc, deleteDoc, serverTimestamp, onSnapshot } from "firebase/firestore";
-import { db } from "../../lib/firebase";
-import NoticePopup from "../../components/NoticePopup";
+import { Trash2, Save } from "lucide-react"; // ShadCN / lucide-react icons
+import GridBackground from "../../components/GridBackground";
 
 export default function EditNotePage() {
+  const params = useSearchParams();
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const noteId = searchParams.get("id");
-  const isNew = searchParams.get("new") === "true";
-
   const { user } = useAuth();
-  const [note, setNote] = useState({ title: "", content: "" });
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [notice, setNotice] = useState({ type: "", message: "" });
-  const [confirmDelete, setConfirmDelete] = useState(false);
+  const id = params.get("id");
 
-  // Load note
+  const [note, setNote] = useState(null);
+
   useEffect(() => {
-    if (!noteId) {
-      router.replace("/notes");
-      return;
-    }
     if (!user) return;
-    if (isNew) {
-      setLoading(false);
-      return;
-    }
+    const timer = setTimeout(() => {
+      const fetchedNote = getNote(id, user.id);
+      setNote(fetchedNote);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [id, user]);
 
-    const ref = doc(db, "users", user.uid, "notes", noteId);
-    const unsubscribe = onSnapshot(
-      ref,
-      (snap) => {
-        if (snap.exists()) {
-          setNote(snap.data());
-        } else {
-          router.replace("/notes");
-        }
-        setLoading(false);
-      },
-      (err) => {
-        console.error(err);
-        setNotice({ type: "error", message: "Failed to load note." });
-        setLoading(false);
-      }
-    );
+  if (!note) return <div className="p-6 text-center text-gray-500">Note not found.</div>;
 
-    return () => unsubscribe();
-  }, [user, noteId, isNew, router]);
-
-  if (!user || loading)
-    return (
-      <div className="p-6 text-center text-xl text-[var(--color-accent)] font-semibold">
-        Loading Note...
-      </div>
-    );
-
-  // Save note
-  const saveNote = async () => {
-    if (!user || !noteId || saving) return;
+  const save = () => {
     if (!note.title.trim() && !note.content.trim()) {
-      setNotice({ type: "warning", message: "Note is empty. Add title or content." });
+      alert("Note cannot be empty!");
       return;
     }
-
-    setSaving(true);
-
-    const ref = doc(db, "users", user.uid, "notes", noteId);
-    const dataToSave = {
-      title: note.title,
-      content: note.content,
-      updatedAt: serverTimestamp(),
-      ...(isNew && { createdAt: serverTimestamp() }),
-    };
-
-    try {
-      setDoc(ref, dataToSave, { merge: true }).catch((err) => console.error(err));
-      setNotice({ type: "success", message: "Note Saved! 🎉" });
-      setTimeout(() => router.push("/notes"), 500);
-    } catch (err) {
-      console.error(err);
-      setNotice({ type: "error", message: "Failed to save note." });
-    } finally {
-      setSaving(false);
-    }
+    updateNote(id, note, user.id);
+    router.push("/notes");
   };
 
-  // Delete note
-  const handleDeleteClick = () => {
-    if (isNew) {
-      router.replace("/notes");
-    } else {
-      setConfirmDelete(true);
-    }
-  };
-
-  const confirmDeleteNote = async () => {
-    try {
-      const ref = doc(db, "users", user.uid, "notes", noteId);
-      await deleteDoc(ref);
-      setNotice({ type: "success", message: "Note deleted successfully." });
-      setTimeout(() => router.push("/notes"), 500);
-    } catch (err) {
-      console.error(err);
-      setNotice({ type: "error", message: "Failed to delete note." });
-    } finally {
-      setConfirmDelete(false);
+  const remove = () => {
+    if (window.confirm("Are you sure you want to delete this note?")) {
+      deleteNote(id, user.id);
+      router.push("/notes");
     }
   };
 
   return (
-    <div className="flex flex-col items-center min-h-screen w-full px-4 py-8 bg-[var(--color-background)]">
-      {/* Buttons */}
-      <div className="w-full max-w-[1200px] flex items-center justify-between mb-6">
-        <button
-          onClick={isNew ? handleDeleteClick : () => router.replace("/notes")}
-          className="p-3 rounded-xl bg-white border shadow-md hover:scale-[1.05] transition"
-        >
-          <ArrowLeft className="w-6 h-6 opacity-70" />
-        </button>
-
-        <div className="flex gap-3 items-center">
-          {!isNew && (
+    <div
+      className="min-h-screen w-full p-6 flex justify-center"
+      style={{ backgroundColor: "#f7f5f2" }} // plain page background
+    >
+      <div className="relative w-full max-w-4xl">
+        {/* Main Note Container */}
+        <div className="relative z-10 p-6 rounded-2xl shadow-xl flex flex-col gap-6 bg-white border-2 border-[var(--color-card)]">
+          
+          {/* Buttons */}
+          <div className="flex justify-end gap-3 w-full">
             <button
-              onClick={handleDeleteClick}
-              className="p-3 rounded-xl bg-red-100 border border-red-300 shadow-md hover:scale-[1.05] transition"
+              onClick={remove}
+              className="flex items-center gap-2 px-4 py-2 bg-red-400 hover:bg-red-500 text-white rounded-full shadow-md hover:shadow-lg transition-transform hover:scale-105 active:scale-95"
             >
-              <Trash2 className="w-6 h-6 text-red-500" />
+              <Trash2 className="h-5 w-5" />
+              <span className="hidden sm:inline">Delete</span>
             </button>
-          )}
-          <button
-            onClick={saveNote}
-            disabled={saving}
-            className={`px-6 py-3 rounded-xl font-semibold shadow-md transition-all duration-200 ${
-              saving
-                ? "bg-[var(--color-muted)] text-[var(--color-background)] cursor-not-allowed"
-                : "bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-dark)] hover:scale-[1.03] active:scale-[0.98]"
-            }`}
-          >
-            {saving ? "Saving..." : "Save"}
-          </button>
+
+
+            <button
+              onClick={save}
+              className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent-dark)] text-white rounded-full shadow hover:shadow-lg transition-transform hover:scale-105 active:scale-95"
+            >
+              <Save className="h-5 w-5" />
+              <span className="hidden sm:inline">Save</span>
+            </button>
+          </div>
+
+      
+          {/* Title */}
+          <input
+            value={note.title}
+            onChange={(e) => setNote({ ...note, title: e.target.value })}
+            placeholder="Title"
+            className="w-full p-4 text-xl md:text-2xl font-bold rounded-xl border-2 border-[var(--color-card)] bg-[var(--color-accent-light)] focus:ring-2 focus:ring-[var(--color-accent)] outline-none"
+            style={{
+              fontFamily: "var(--font-appname)",
+              letterSpacing: "1.2px", // increased spacing for title
+            }}
+          />
+
+
+          {/* Textarea with grid */}
+          <div className="relative w-full rounded-xl overflow-hidden">
+            {/* Grid background */}
+            <div className="absolute inset-0 z-0 pointer-events-none">
+              <GridBackground inContainer={true} />
+            </div>
+
+            {/* Textarea */}
+            <textarea
+              value={note.content}
+              onChange={(e) => setNote({ ...note, content: e.target.value })}
+              placeholder="Write your note here..."
+              className="relative z-10 w-full p-4 md:p-6 bg-transparent border-0 min-h-[500px] resize-none focus:ring-2 focus:ring-[var(--color-accent)] outline-none text-lg sm:text-xl leading-relaxed"
+              style={{
+                fontFamily: "var(--font-appname)",
+                lineHeight: "28px", // align text with grid
+                letterSpacing: "0.5px", // subtle spacing for the note text
+              }}
+            />
+
+            {/* Stickers */}
+            <div className="absolute inset-0 z-20 pointer-events-auto">
+                <StickerContainer />
+            </div>
+
+          </div>
+
+
+
         </div>
       </div>
-
-      {/* Floating Notice Popup */}
-      {notice.message && (
-        <NoticePopup
-          id={`notice-${notice.type}`}
-          type={notice.type}
-          message={notice.message}
-          duration={2000}
-          onClose={() => setNotice({ type: "", message: "" })}
-        />
-      )}
-
-      {/* Delete Confirmation Modal */}
-      {confirmDelete && (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl p-6 w-[90%] max-w-md shadow-lg flex flex-col gap-4">
-            <h2 className="text-lg font-bold">Delete Note?</h2>
-            <p className="text-gray-600">This action cannot be undone. Are you sure?</p>
-            <div className="flex justify-end gap-3 mt-4">
-              <button
-                onClick={() => setConfirmDelete(false)}
-                className="px-4 py-2 rounded-xl border shadow hover:bg-gray-100 transition"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDeleteNote}
-                className="px-4 py-2 rounded-xl bg-red-500 text-white shadow hover:bg-red-600 transition"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Inputs */}
-      <input
-        type="text"
-        placeholder="Title"
-        value={note.title}
-        onChange={(e) => setNote((n) => ({ ...n, title: e.target.value }))}
-        className="w-full max-w-[1200px] p-4 mb-4 text-2xl font-extrabold rounded-xl border-2 border-[var(--color-muted)] bg-white/60 focus:border-[var(--color-accent)] outline-none"
-      />
-      <textarea
-        placeholder="Write your note here..."
-        value={note.content}
-        onChange={(e) => setNote((n) => ({ ...n, content: e.target.value }))}
-        className="w-full max-w-[1200px] p-4 flex-1 min-h-[50vh] rounded-xl border-2 border-[var(--color-muted)] bg-white/60 resize-none focus:border-[var(--color-accent)] outline-none text-lg"
-      />
     </div>
   );
 }

@@ -193,6 +193,8 @@ button, input, textarea, select { user-select: auto; cursor: pointer; }
   border-radius: 30%;
 }
 
+
+
 /* Set lighter custom backgrounds for active/current dates */
 .react-calendar .react-calendar__tile--active {
   background-color: transparent !important;

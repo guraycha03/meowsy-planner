@@ -1,11 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
-import { db } from "../../lib/firebase";
+import { createNote, getAllNotes } from "../../lib/localNotes";
+import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { Plus } from "lucide-react";
 
 export default function NotesPage() {
   const router = useRouter();
@@ -14,57 +12,63 @@ export default function NotesPage() {
 
   useEffect(() => {
     if (!user) return;
-
-    const ref = collection(db, "users", user.uid, "notes");
-    const q = query(ref, orderBy("updatedAt", "desc"));
-
-    const unsub = onSnapshot(q, (snapshot) => {
-      const list = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setNotes(list);
-    });
-
-    return () => unsub();
+    const timer = setTimeout(() => {
+      const all = getAllNotes(user.id);
+      setNotes(all);
+    }, 0);
+    return () => clearTimeout(timer);
   }, [user]);
 
+  const handleAddNote = () => {
+    if (!user) return;
+    const newNote = createNote(user.id);
+    router.push(`/edit-note?id=${newNote.id}`);
+  };
+
   return (
-    <div className="p-6 max-w-2xl mx-auto">
+    <div className="p-6 max-w-5xl mx-auto flex flex-col gap-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <h1 className="text-2xl font-bold">Your Notes</h1>
+        <button
+          onClick={handleAddNote}
+          className="px-5 py-2 bg-[var(--color-accent-dark2)] text-white rounded-xl shadow hover:scale-105 transition-transform"
+        >
+          + Add Note
+        </button>
+      </div>
 
-      {/* Add Note */}
-      <button
-        onClick={() => {
-          const id = crypto.randomUUID();
-          router.push(`/edit-note?id=${id}&new=true`);
-        }}
-        className="fixed bottom-24 right-6 z-[200] bg-[var(--color-accent)] text-white p-4 rounded-full shadow-lg hover:scale-105 transition"
-      >
-        <Plus className="w-6 h-6" />
-      </button>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {notes.length > 0 ? (
+          notes.map((note) => (
 
-      <h1 className="text-3xl font-bold mb-6">My Notes</h1>
 
-      {/* Notes List */}
-      <div className="space-y-4">
-        {notes.length === 0 && (
-          <p className="text-gray-500 text-center mt-20">
-            You have no notes yet. Tap the + button to create one.
-          </p>
+            <div
+              key={note.id}
+              className="
+                p-5 rounded-2xl shadow-sm 
+                bg-[var(--color-accent-light2)]
+                border border-[var(--color-accent-light)]
+                hover:shadow-md hover:scale-[1.01]
+                transition-all cursor-pointer
+                flex flex-col
+              "
+              onClick={() => router.push(`/edit-note?id=${note.id}`)}
+            >
+              <h3 className="font-semibold text-lg mb-2 text-[var(--color-foreground)] truncate">
+                {note.title || "Untitled"}
+              </h3>
+
+              <p className="text-sm text-gray-600 line-clamp-4">
+                {note.content || "No content yet."}
+              </p>
+            </div>
+
+
+
+          ))
+        ) : (
+          <p className="text-gray-500 col-span-full text-center">No notes yet.</p>
         )}
-
-        {notes.map((note) => (
-          <div
-            key={note.id}
-            onClick={() => router.push(`/edit-note?id=${note.id}`)}
-            className="p-4 bg-white rounded-xl border shadow-sm hover:shadow-md cursor-pointer transition"
-          >
-            <h2 className="font-bold text-xl">{note.title || "(Untitled)"}</h2>
-            <p className="text-gray-600 text-sm mt-1 line-clamp-2">
-              {note.content || "No content..."}
-            </p>
-          </div>
-        ))}
       </div>
     </div>
   );
