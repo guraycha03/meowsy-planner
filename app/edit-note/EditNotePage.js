@@ -25,6 +25,10 @@ export default function EditNotePageContent() {
   const { user } = useAuth();
   const id = params.get("id");
 
+
+  const [draggingStickerId, setDraggingStickerId] = useState(null);
+
+
 const STICKER_SIZE = 50;
 
   const [note, setNote] = useState(null);
@@ -97,6 +101,8 @@ useEffect(() => {
     router.push("/notes");
   };
 
+
+
   const addSticker = (src) => {
   const container = document.getElementById("note-area");
   const content = document.getElementById("virtual-note-content");
@@ -122,33 +128,39 @@ useEffect(() => {
 
 
   const handleStickerDrag = (stickerId, x, y) => {
-    // NOTE: The container is now the INNER scrollable div, 
-    // but the sticker calculation needs to use the virtual note height
-    const container = document.getElementById("virtual-note-content");
-    if (!container) return;
-     
-    // The "container" height for calculation is the full scrollable height (virtualNoteHeight)
-    const containerWidth = container.clientWidth - STICKER_SIZE;
-    // We use the dynamic virtual height here
-    const containerHeight = virtualNoteHeight - STICKER_SIZE; 
+  if (x === -1 && y === -1) {
+    // Delete sticker directly
+    setStickers(prev => prev.filter(s => s.id !== stickerId));
+    setNote(prevNote => ({
+      ...prevNote,
+      stickers: prevNote.stickers.filter(s => s.id !== stickerId)
+    }));
+    updateNote(id, { stickers: stickers.filter(s => s.id !== stickerId) }, user.id);
+    return;
+  }
 
-    // Calculate percentage relative to the available space
-    const xPercent = x / containerWidth;
-    const yPercent = y / containerHeight;
+  const container = document.getElementById("virtual-note-content");
+  if (!container) return;
 
-    setStickers(prev => {
-      const updated = prev.map(sticker =>
-        sticker.id === stickerId ? { 
-            ...sticker, 
-            xPercent: Math.max(0, Math.min(xPercent, 1)), 
-            yPercent: Math.max(0, Math.min(yPercent, 1)) 
-        } : sticker
-      );
-      setNote(prevNote => ({ ...prevNote, stickers: updated }));
-      updateNote(id, { stickers: updated }, user.id); 
-      return updated;
-    });
-  };
+  const containerWidth = container.clientWidth - STICKER_SIZE;
+  const containerHeight = virtualNoteHeight - STICKER_SIZE;
+
+  const xPercent = x / containerWidth;
+  const yPercent = y / containerHeight;
+
+  setStickers(prev => {
+    const updated = prev.map(sticker =>
+      sticker.id === stickerId
+        ? { ...sticker, xPercent: Math.max(0, Math.min(xPercent, 1)), yPercent: Math.max(0, Math.min(yPercent, 1)) }
+        : sticker
+    );
+    setNote(prevNote => ({ ...prevNote, stickers: updated }));
+    updateNote(id, { stickers: updated }, user.id);
+    return updated;
+  });
+};
+
+
 
 
   const remove = () => {
@@ -158,15 +170,25 @@ useEffect(() => {
     }
   };
 
+
   const buttonBaseClasses =
     "flex items-center gap-2 px-4 py-2 rounded-full shadow-md transition-transform hover:scale-105 active:scale-95 w-auto justify-center";
 
     
           return (
             <div className="w-full px-2 py-2 relative bg-[#f7f5f2]">
+ 
+              {/* Sticker Toggle */}
+              <div
+                className="fixed bottom-4 flex items-center gap-2 z-[9999]"
+                style={{ right: "3rem" }} // moves it 32px from the edge
+              >
+                <StickersPanel onAddSticker={addSticker} />
+              </div>
 
 
-              <StickersPanel onAddSticker={addSticker} />
+
+
 
               <div className="relative w-full max-w-4xl mx-auto my-0">
 
@@ -259,11 +281,18 @@ useEffect(() => {
         initialXPercent={s.xPercent}
         initialYPercent={s.yPercent}
         onDragStop={handleStickerDrag}
+        onDragStart={(id) => setDraggingStickerId(id)}
         stickerSize={STICKER_SIZE}
       />
+
     ))}
+
+
   </div>
 </div>
+
+
+
 
 
       </div>

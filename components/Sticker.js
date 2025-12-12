@@ -9,6 +9,7 @@ export default function Sticker({
   initialXPercent = 0.1,
   initialYPercent = 0.1,
   onDragStop,
+  onDragStart,
   stickerSize = 50,
 }) {
   const stickerRef = useRef(null);
@@ -17,31 +18,25 @@ export default function Sticker({
 
   const [pos, setPos] = useState({ x: 0, y: 0 });
   const posRef = useRef(pos);
+  const [selected, setSelected] = useState(false);
 
   useEffect(() => {
     posRef.current = pos;
   }, [pos]);
 
-  // --- Initialize sticker position ---
+  // Initialize sticker position
   useEffect(() => {
     const content = document.getElementById("virtual-note-content");
     if (!content) return;
-
     const maxX = content.clientWidth - stickerSize;
     const maxY = content.clientHeight - stickerSize;
 
-    // Defer setting state to avoid cascading render warning
     const id = requestAnimationFrame(() => {
-        setPos({
-        x: initialXPercent * maxX,
-        y: initialYPercent * maxY,
-        });
+      setPos({ x: initialXPercent * maxX, y: initialYPercent * maxY });
     });
-
     return () => cancelAnimationFrame(id);
-    }, [initialXPercent, initialYPercent, stickerSize]);
+  }, [initialXPercent, initialYPercent, stickerSize]);
 
-  // --- Drag functions ---
   const getCoords = (e) =>
     e.touches ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : { x: e.clientX, y: e.clientY };
 
@@ -56,7 +51,6 @@ export default function Sticker({
     let newX = coords.x - rect.left - offset.current.x + content.scrollLeft;
     let newY = coords.y - rect.top - offset.current.y + content.scrollTop;
 
-    // Clamp inside content
     newX = Math.max(0, Math.min(newX, content.clientWidth - stickerSize));
     newY = Math.max(0, Math.min(newY, content.clientHeight - stickerSize));
 
@@ -90,10 +84,34 @@ export default function Sticker({
       y: coords.y - rect.top + content.scrollTop,
     };
 
+    setSelected(true); // select on drag start
+    if (onDragStart) onDragStart(id);
+
     document.addEventListener("mousemove", handleDragMove);
     document.addEventListener("mouseup", handleDragStop);
     document.addEventListener("touchmove", handleDragMove, { passive: false });
     document.addEventListener("touchend", handleDragStop);
+  };
+
+  // Deselect when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (stickerRef.current && !stickerRef.current.contains(e.target)) {
+        setSelected(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, []);
+
+  // Toggle selection on tap/click (without dragging)
+  const handleClick = (e) => {
+    e.stopPropagation();
+    setSelected(true); // always select on click
   };
 
   return (
@@ -101,6 +119,7 @@ export default function Sticker({
       ref={stickerRef}
       onMouseDown={handleDragStart}
       onTouchStart={handleDragStart}
+      onClick={handleClick}
       className="absolute cursor-grab active:cursor-grabbing select-none"
       style={{
         left: pos.x,
@@ -118,6 +137,18 @@ export default function Sticker({
         draggable={false}
         className="w-full h-full"
       />
+
+      {selected && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDragStop(id, -1, -1); // delete
+          }}
+          className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs z-50"
+        >
+          ✕
+        </button>
+      )}
     </div>
   );
 }

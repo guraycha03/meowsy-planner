@@ -30,8 +30,9 @@ export default function StickersPanel({ onAddSticker }) {
   return (
     <div
       ref={panelRef}
-      className="fixed top-1/2 right-0 z-[9999] transform -translate-y-1/2 flex items-center"
+      className="fixed top-1/2 right-6 z-[9999] transform -translate-y-1/2 flex items-center"
     >
+
       {/* Toggle button */}
       <button
         onClick={() => setOpen(!open)}
