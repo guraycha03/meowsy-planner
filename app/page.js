@@ -1,3 +1,4 @@
+// pages/index.js (HomePage)
 "use client";
 
 import { useEffect, useState } from "react";
@@ -5,8 +6,10 @@ import { QUOTES } from "../data/quotes";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../context/AuthContext";
 import { getAllNotes } from "../lib/localNotes";
+import { calculateChecklistProgress } from "../lib/checklistUtils"; // Import the utility
 
 import DateTimeCard from "../components/DateTimeCard"; 
+import { CheckSquare } from "lucide-react"; // Import Icon
 
 const LIGHT_BG_COLORS = [
   "#fff5f1", // A warm, light pinkish-white
@@ -24,7 +27,9 @@ export default function HomePage() {
   const [isClient, setIsClient] = useState(false);
   const [currentQuote, setCurrentQuote] = useState(() => QUOTES[Math.floor(Math.random() * QUOTES.length)]);
   const [bgColor, setBgColor] = useState(() => LIGHT_BG_COLORS[Math.floor(Math.random() * LIGHT_BG_COLORS.length)]);
-  const [fade, setFade] = useState(false); // Kept for potential animation logic
+  const [fade, setFade] = useState(false); 
+  // New State for Checklist Progress
+  const [checklistProgress, setChecklistProgress] = useState(calculateChecklistProgress()); 
 
   const WELCOME_MESSAGES = [
     "Hope you have a productive day!",
@@ -40,11 +45,11 @@ export default function HomePage() {
     if (!str) return '';
     // Replace special characters with HTML entities to prevent rendering issues
     return str
-      .replace(/&/g, "&amp;") // Must replace '&' first
+      .replace(/&/g, "&amp;") 
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;") // Replaces double quotes
-      .replace(/'/g, "&#039;"); // Replaces single quotes
+      .replace(/"/g, "&quot;") 
+      .replace(/'/g, "&#039;"); 
   };
   
   // SSR fix (deferred)
@@ -57,12 +62,27 @@ export default function HomePage() {
   useEffect(() => {
     if (!user) return;
     const timer = setTimeout(() => {
-      // Fetch all notes and sort them by date (most recent first) for 'Last Edited' display
       const allNotes = getAllNotes(user.id).sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
       setNotes(allNotes);
     }, 0);
     return () => clearTimeout(timer);
   }, [user]);
+
+  // Load Checklist Progress (Trigger refresh when component mounts or gains focus)
+  useEffect(() => {
+    // This function will refresh the checklist progress every time the page loads or returns to focus
+    const refreshProgress = () => {
+        setChecklistProgress(calculateChecklistProgress());
+    };
+
+    // Load once on mount
+    refreshProgress();
+
+    // Listen for storage changes (e.g., if user checks an item on the checklist page)
+    window.addEventListener('storage', refreshProgress); 
+    return () => window.removeEventListener('storage', refreshProgress);
+  }, []);
+
 
   // Quote & background animation
   useEffect(() => {
@@ -107,13 +127,39 @@ export default function HomePage() {
             <DateTimeCard />
           </div>
 
+          {/* CHECKLIST PROGRESS CARD (New addition) */}
+          <div 
+            onClick={() => router.push("/checklist")} // Interactive: Click to go to checklist
+            className="w-full p-4 rounded-2xl shadow-xl bg-white border-2 border-[var(--color-card)] relative overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98] sm:max-w-md sm:mx-auto"
+          >
+            <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2 text-[var(--color-dark-green)]">
+                    <CheckSquare className="w-6 h-6" />
+                    <span className="text-lg font-bold">Overall Checklist Progress</span>
+                </div>
+                <span className="text-xl font-extrabold text-[var(--color-accent)]">{checklistProgress.progressPercent}%</span>
+            </div>
+
+            {/* Progress Track (Same premium style) */}
+            <div className="h-2 w-full rounded-full bg-gray-100 relative">
+              <div 
+                className="absolute top-0 left-0 h-full rounded-full bg-[var(--color-accent)] transition-all duration-500 ease-out shadow-inner"
+                style={{ width: `${checklistProgress.progressPercent}%` }}
+              ></div>
+            </div>
+            <p className="mt-2 text-sm text-gray-500 text-right">
+              {checklistProgress.completedTasks} of {checklistProgress.totalTasks} tasks completed.
+            </p>
+          </div>
+
+
           {/* Action Buttons (Interactive) */}
           <div className="flex flex-wrap gap-4 justify-center">
             {/* My Notes Button */}
             <button 
               onClick={() => router.push("/notes")}
               className="px-6 py-3 bg-[var(--color-accent)] text-white rounded-xl shadow-md font-semibold
-                         hover:bg-[var(--color-accent-dark)] transition-all transform hover:scale-105 active:scale-95"
+                          hover:bg-[var(--color-accent-dark)] transition-all transform hover:scale-105 active:scale-95"
             >
               My Notes
             </button>
@@ -121,7 +167,7 @@ export default function HomePage() {
             <button 
               onClick={() => router.push("/edit-note")}
               className="px-6 py-3 bg-[var(--color-accent-dark2)] text-white rounded-xl shadow-md font-semibold
-                         hover:bg-[var(--color-foreground)] transition-all transform hover:scale-105 active:scale-95"
+                          hover:bg-[var(--color-foreground)] transition-all transform hover:scale-105 active:scale-95"
             >
               + Add Note
             </button>
@@ -151,17 +197,15 @@ export default function HomePage() {
         <div className="flex-1 flex flex-col gap-6">
           <div className="flex justify-center lg:mt-8 mt-4">
             <div className="relative max-w-md w-full bg-[var(--color-accent-light2)]
-                           rounded-2xl shadow-xl p-8
-                           border-2 border-[var(--color-card)]
-                           flex flex-col items-center text-center
-                           transition-colors duration-300 hover:shadow-2xl">
+                            rounded-2xl shadow-xl p-8
+                            border-2 border-[var(--color-card)]
+                            flex flex-col items-center text-center
+                            transition-colors duration-300 hover:shadow-2xl">
               
               <h3 className="text-sm font-light uppercase tracking-widest text-[var(--color-accent-dark)] mb-4">Daily Inspiration</h3>
               
-              {/* 🌟 FIX: Using dangerouslySetInnerHTML with encoding for quote safety 🌟 */}
               <p 
                 className="text-[var(--color-foreground)] font-['Patrick Hand'] text-xl md:text-2xl leading-relaxed italic"
-                // The key fix: Encode the quote and wrap it in typographic quotes using __html
                 dangerouslySetInnerHTML={{ __html: `&ldquo;${encodeHTML(currentQuote)}&rdquo;` }}
               />
               

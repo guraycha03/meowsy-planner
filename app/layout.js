@@ -4,6 +4,7 @@
 import "./globals.css";
 import { Quicksand, Patrick_Hand } from "next/font/google";
 import { AuthProvider } from "../context/AuthContext";
+import { NotificationProvider } from "../context/NotificationContext"; // <--- IMPORTED HERE
 import { usePathname } from "next/navigation";
 import TopNav from "../components/TopNav";
 import BottomNav from "../components/BottomNav";
@@ -31,11 +32,18 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={`${quicksand.variable} ${patrickHand.variable} font-sans`}>
-        <AuthProvider>
-          {showNav && <TopNav />}
-          <main className="flex-1">{children}</main>
-          {showNav && <BottomNav />}
-        </AuthProvider>
+        {/*
+          WRAP THE ENTIRE APPLICATION WITH NotificationProvider
+          This ensures the notification state and display portal are available
+          to all child components, regardless of which page they are on.
+        */}
+        <NotificationProvider>
+          <AuthProvider>
+            {showNav && <TopNav />}
+            <main className="flex-1">{children}</main>
+            {showNav && <BottomNav />}
+          </AuthProvider>
+        </NotificationProvider>
       </body>
     </html>
   );

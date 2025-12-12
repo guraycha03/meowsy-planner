@@ -1,22 +1,14 @@
+// components/NoticePopup.js
 "use client";
 
-import { useEffect, useState } from "react";
-import { CheckCircle, AlertTriangle, XCircle } from "lucide-react";
+import { CheckCircle, AlertTriangle, XCircle, X } from "lucide-react";
+import { useState, useEffect } from "react";
 
-export default function NoticePopup({ id, type = "success", message, duration = 2000, onClose }) {
-  const [visible, setVisible] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setVisible(false);
-      if (onClose) onClose();
-    }, duration);
-
-    return () => clearTimeout(timer);
-  }, [duration, onClose]);
-
-  if (!visible) return null;
-
+// Reusable Notification Style Component
+export default function NoticePopup({ id, type = "success", message, onClose }) {
+  // We use Tailwind's `pointer-events-auto` to make the individual popup clickable, 
+  // while the container in the context remains `pointer-events-none` until a hover/click.
+  
   const typeStyles = {
     success: "bg-green-100 border-green-400 text-green-700",
     warning: "bg-yellow-100 border-yellow-400 text-yellow-700",
@@ -24,17 +16,31 @@ export default function NoticePopup({ id, type = "success", message, duration = 
   };
 
   const icons = {
-    success: <CheckCircle className="w-5 h-5" />,
-    warning: <AlertTriangle className="w-5 h-5" />,
-    error: <XCircle className="w-5 h-5" />,
+    success: <CheckCircle className="w-5 h-5 flex-shrink-0" />,
+    warning: <AlertTriangle className="w-5 h-5 flex-shrink-0" />,
+    error: <XCircle className="w-5 h-5 flex-shrink-0" />,
   };
 
   return (
     <div
       id={id}
-      className={`fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[999] px-6 py-3 rounded-xl border flex items-center justify-center gap-2 font-semibold shadow-lg ${typeStyles[type]} animate-slide-up`}
+      className={`relative max-w-sm w-full p-4 rounded-xl border flex items-center gap-3 font-semibold shadow-lg transition-all duration-300 transform 
+      // Styles for placement and interaction
+      pointer-events-auto opacity-100 translate-y-0
+      ${typeStyles[type]}`}
+      role="alert"
     >
-      {icons[type]} {message}
+      {icons[type]} 
+      <span className="flex-1 text-sm">{message}</span>
+      
+      {/* Explicit Close Button (Interactive) */}
+      <button
+        onClick={onClose}
+        aria-label="Close notification"
+        className={`ml-4 p-1 rounded-full hover:bg-opacity-70 transition-colors flex-shrink-0 opacity-80 ${type === 'success' ? 'hover:bg-green-200' : type === 'warning' ? 'hover:bg-yellow-200' : 'hover:bg-red-200'}`}
+      >
+        <X className="w-4 h-4" />
+      </button>
     </div>
   );
 }
