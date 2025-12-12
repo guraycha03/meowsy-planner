@@ -1,10 +1,10 @@
-// pages/notes/edit/EditNotePageContent.js - FIXED FOR RESPONSIVE SCALING
+// pages/notes/edit/EditNotePageContent.js - FIXED FOR SCROLLING STICKERS
 
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { getNote, updateNote, deleteNote } from "../../lib/localNotes";
-import { useEffect, useState, useRef } from "react"; // Added useRef
+import { useEffect, useState, useRef } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { ArrowLeft, Trash2, Save } from "lucide-react";
 
@@ -29,9 +29,9 @@ const STICKER_SIZE = 50;
 
   const [note, setNote] = useState(null);
   const [stickers, setStickers] = useState([]);
-  const contentRef = useRef(null);
-  const [containerHeight, setContainerHeight] = useState(500); // Initial height
-
+  // We need a ref for the virtual scrollable content to get its height
+  const noteContentRef = useRef(null); 
+  const [virtualNoteHeight, setVirtualNoteHeight] = useState(500); // State for the height of the inner scrolling content
 
   useEffect(() => {
     if (!user || !id) return;
@@ -40,39 +40,50 @@ const STICKER_SIZE = 50;
     if (fetchedNote) {
       Promise.resolve().then(() => {
         setNote(fetchedNote);
-        // IMPORTANT: We now expect stickers to store xPercent and yPercent
         setStickers(fetchedNote.stickers || []);
       });
     }
   }, [id, user]);
 
-  // --- NOTE AREA HEIGHT ADJUSTMENT ---
+  // --- Content Height Calculation (Reintroduced to drive inner container height) ---
   useEffect(() => {
-    // Function to adjust the note container height based on textarea content
     const adjustHeight = () => {
-      if (contentRef.current) {
-        // Reset height to recalculate scrollHeight
-        contentRef.current.style.height = '0px'; 
-        const newHeight = Math.max(500, contentRef.current.scrollHeight + contentRef.current.offsetHeight - contentRef.current.clientHeight);
-        setContainerHeight(newHeight);
+      if (noteContentRef.current) {
+        // Calculate the required height of the text area. 
+        // We use scrollHeight to get the content's full height.
+        const contentScrollHeight = noteContentRef.current.scrollHeight;
+        
+        // Set the virtual note height to be at least 500px, 
+        // or the height needed to fit the content (plus a little padding).
+        const newHeight = Math.max(500, contentScrollHeight + 40); // 40px buffer for bottom padding
+        setVirtualNoteHeight(newHeight);
       }
     };
 
-    // Initial adjustment and re-adjustment on content change
     adjustHeight();
+    // Re-adjust height when content changes
+    const timeoutId = setTimeout(adjustHeight, 0); // Ensure calculation runs after render
 
-    // Add resize observer to handle screen size changes (responsive container)
-    const observer = new ResizeObserver(adjustHeight);
-    const noteArea = document.getElementById("note-area");
-    if (noteArea) observer.observe(noteArea);
+    return () => clearTimeout(timeoutId);
+    
+  }, [note?.content]);
 
-    return () => {
-      if (noteArea) observer.unobserve(noteArea);
-    };
 
-  }, [note?.content]); // Rerun when content changes
 
-  // -----------------------------------
+
+const [textareaHeight, setTextareaHeight] = useState("auto");
+
+useEffect(() => {
+  if (noteContentRef.current) {
+    noteContentRef.current.style.height = "auto"; // reset
+    noteContentRef.current.style.height = noteContentRef.current.scrollHeight + "px"; // auto-grow
+    setTextareaHeight(noteContentRef.current.scrollHeight + "px"); // optional, in case you want inline style
+  }
+}, [note?.content]);
+
+
+
+  // --------------------------------------------------------------------------
 
 
   if (!note) return <div className="p-6 text-center text-gray-500">Note not found.</div>;
@@ -82,30 +93,44 @@ const STICKER_SIZE = 50;
       alert("Note cannot be empty!");
       return;
     }
-    // IMPORTANT: Save also includes the final sticker positions, but they are already persisted in real-time.
     updateNote(id, { title: note.title, content: note.content }, user.id);
     router.push("/notes");
   };
 
   const addSticker = (src) => {
-    setStickers(prev => {
-      // Use percentage for initial position (10% from top/left)
-      const newSticker = { id: uuidv4(), src, xPercent: 0.1, yPercent: 0.1 }; 
-      const newStickers = [...prev, newSticker];
-      setNote(prevNote => ({ ...prevNote, stickers: newStickers }));
-      updateNote(id, { stickers: newStickers }, user.id);
-      return newStickers;
-    });
-  };
+  const container = document.getElementById("note-area");
+  const content = document.getElementById("virtual-note-content");
+  if (!container || !content) return;
+
+  // Horizontal: spawn at 10% from left
+  const x = 0.1 * (content.clientWidth - STICKER_SIZE);
+  // Vertical: spawn at current scroll position + some offset (20px)
+  const y = container.scrollTop + 20;
+
+  // Convert to percentage of available area
+  const xPercent = x / (content.clientWidth - STICKER_SIZE);
+  const yPercent = y / (content.clientHeight - STICKER_SIZE);
+
+  setStickers(prev => {
+    const newSticker = { id: uuidv4(), src, xPercent, yPercent };
+    const newStickers = [...prev, newSticker];
+    setNote(prevNote => ({ ...prevNote, stickers: newStickers }));
+    updateNote(id, { stickers: newStickers }, user.id);
+    return newStickers;
+  });
+};
+
 
   const handleStickerDrag = (stickerId, x, y) => {
-    const container = document.getElementById("note-area");
+    // NOTE: The container is now the INNER scrollable div, 
+    // but the sticker calculation needs to use the virtual note height
+    const container = document.getElementById("virtual-note-content");
     if (!container) return;
-    
-    // Calculate the available space for the sticker's top-left corner
-    // This ensures that 100% means the sticker's right/bottom edge is at the container's edge.
+     
+    // The "container" height for calculation is the full scrollable height (virtualNoteHeight)
     const containerWidth = container.clientWidth - STICKER_SIZE;
-    const containerHeight = container.clientHeight - STICKER_SIZE;
+    // We use the dynamic virtual height here
+    const containerHeight = virtualNoteHeight - STICKER_SIZE; 
 
     // Calculate percentage relative to the available space
     const xPercent = x / containerWidth;
@@ -113,12 +138,11 @@ const STICKER_SIZE = 50;
 
     setStickers(prev => {
       const updated = prev.map(sticker =>
-        // Ensure percentages don't go below 0 or above 1 (100%)
         sticker.id === stickerId ? { 
-            ...sticker, 
-            xPercent: Math.max(0, Math.min(xPercent, 1)), 
-            yPercent: Math.max(0, Math.min(yPercent, 1)) 
-        } : sticker
+            ...sticker, 
+            xPercent: Math.max(0, Math.min(xPercent, 1)), 
+            yPercent: Math.max(0, Math.min(yPercent, 1)) 
+        } : sticker
       );
       setNote(prevNote => ({ ...prevNote, stickers: updated }));
       updateNote(id, { stickers: updated }, user.id); 
@@ -137,84 +161,114 @@ const STICKER_SIZE = 50;
   const buttonBaseClasses =
     "flex items-center gap-2 px-4 py-2 rounded-full shadow-md transition-transform hover:scale-105 active:scale-95 w-auto justify-center";
 
-  
-          return (
-  <div className="min-h-screen w-full p-6 pb-24 relative bg-[#f7f5f2]">
-    <StickersPanel onAddSticker={addSticker} />
+    
+          return (
+            <div className="w-full px-2 py-2 relative bg-[#f7f5f2]">
 
-    <div className="relative w-full max-w-4xl mx-auto">
-      <div className="relative z-10 p-6 rounded-2xl shadow-xl flex flex-col gap-6 bg-white border-2 border-[var(--color-card)]">
-        
-        {/* Header */}
-        <div className="flex flex-wrap justify-between items-center w-full gap-2">
-          <button
-            onClick={() => router.back()}
-            className={`${buttonBaseClasses} px-5 py-2 bg-[var(--color-accent-light)] hover:bg-[var(--color-accent)] text-[var(--color-foreground)] font-semibold`}
-          >
-            <ArrowLeft className="h-5 w-5" />
-            Back
-          </button>
 
-          <div className="flex flex-wrap gap-2 justify-end">
-            <button
-              onClick={remove}
-              className={`${buttonBaseClasses} bg-red-400 hover:bg-red-500 text-white`}
-            >
-              <Trash2 className="h-5 w-5" />
-              <span className="hidden sm:inline">Delete</span>
-            </button>
-            <button
-              onClick={save}
-              className={`${buttonBaseClasses} bg-[var(--color-accent)] hover:bg-[var(--color-accent-dark)] text-white`}
-            >
-              <Save className="h-5 w-5" />
-              <span className="hidden sm:inline">Save</span>
-            </button>
-          </div>
-        </div>
+              <StickersPanel onAddSticker={addSticker} />
 
-        {/* Title */}
-        <input
-          value={note.title}
-          onChange={(e) => setNote({ ...note, title: e.target.value })}
-          placeholder="Title"
-          className={`w-full p-4 text-xl md:text-2xl font-bold rounded-xl border-2 border-[var(--color-card)] bg-[var(--color-accent-light)] focus:ring-2 focus:ring-[var(--color-accent)] outline-none ${patrickHand.className} tracking-wide`}
-        />
+              <div className="relative w-full max-w-4xl mx-auto my-0">
 
-        {/* NOTE AREA - Height is dynamic */}
-        <div
+               <div className="relative z-10 p-3 mt-0 mb-0 rounded-2xl shadow-xl flex flex-col gap-2 bg-white border-2 border-[var(--color-card)]">
+
+
+              
+              {/* Header and Title unchanged... */}
+              {/* HEADER */}
+              <div className="flex flex-wrap justify-between items-center w-full gap-1 mt-0 mb-1">
+
+
+              {/* Back Button */}
+              <button
+                onClick={() => router.back()}
+                className={`${buttonBaseClasses} px-5 py-2 bg-[var(--color-accent-light)] hover:bg-[var(--color-accent)] text-[var(--color-foreground)] font-semibold`}
+              >
+                <ArrowLeft className="h-5 w-5" />
+                <span>Back</span>
+              </button>
+
+              {/* Right-Side Buttons */}
+              <div className="flex gap-2">
+                <button
+                  onClick={remove}
+                  className={`${buttonBaseClasses} bg-red-400 hover:bg-red-500 text-white`}
+                >
+                  <Trash2 className="h-5 w-5" />
+                  <span className="hidden sm:inline">Delete</span>
+                </button>
+
+                <button
+                  onClick={save}
+                  className={`${buttonBaseClasses} bg-[var(--color-accent)] hover:bg-[var(--color-accent-dark)] text-white`}
+                >
+                  <Save className="h-5 w-5" />
+                  <span className="hidden sm:inline">Save</span>
+                </button>
+              </div>
+
+            </div>
+
+
+        <input
+          value={note.title}
+          onChange={(e) => setNote({ ...note, title: e.target.value })}
+          placeholder="Title"
+          className={`w-full p-2 text-xl md:text-2xl font-bold rounded-xl border-2 border-[var(--color-card)] bg-[var(--color-accent-light)] focus:ring-2 focus:ring-[var(--color-accent)] outline-none ${patrickHand.className} tracking-wide`}
+        />
+
+        {/* MAIN NOTE SCROLLABLE CONTAINER (The window) */}
+        <div
           id="note-area"
-          className="relative w-full rounded-xl overflow-hidden"
-          style={{ minHeight: `${containerHeight}px`, transition: 'min-height 0.2s ease-out' }}
+          className="relative w-full rounded-xl border-2 border-[var(--color-card)] min-h-[450px] max-h-[65vh] overflow-y-auto"
         >
-          <div className="absolute inset-0 z-0 pointer-events-none">
-            <GridBackground inContainer={true} />
-          </div>
 
-          <textarea
-            ref={contentRef}
-            value={note.content}
-            onChange={(e) => setNote({ ...note, content: e.target.value })}
-            placeholder="Write your note here..."
-            className={`relative z-20 w-full p-6 bg-transparent border-0 h-full resize-none outline-none text-lg sm:text-xl leading-relaxed ${patrickHand.className} tracking-wide`}
-            style={{ minHeight: '500px', height: '100%' }}
-          />
+          
+          {/* VIRTUAL NOTE CONTENT (The piece of paper) */}
+ 
+  {/* VIRTUAL NOTE CONTENT */}
+  <div
+    id="virtual-note-content"
+    className="relative w-full"
+    style={{ minHeight: `${virtualNoteHeight}px` }}
+  >
+    {/* Grid Background - stays below */}
+    <GridBackground inContainer={true} className="absolute inset-0 z-0 pointer-events-none" />
 
-          {stickers.map((s) => (
-            <Sticker
-              key={s.id}
-              id={s.id}
-              src={s.src}
-              initialXPercent={s.xPercent}
-              initialYPercent={s.yPercent}
-              onDragStop={handleStickerDrag}
-              stickerSize={STICKER_SIZE}
-            />
-          ))}
-        </div>
-      </div>
-    </div>
+    {/* TEXTAREA */}
+    <textarea
+      ref={noteContentRef}
+      value={note.content}
+      onChange={(e) => setNote({ ...note, content: e.target.value })}
+      placeholder="Write your note here..."
+      className={`relative z-10 w-full p-4 bg-transparent border-0 outline-none text-lg sm:text-xl leading-relaxed ${patrickHand.className} tracking-wide`}
+      style={{
+        height: textareaHeight, 
+        overflow: "hidden",
+        resize: "none",
+      }}
+    />
+
+
+    {/* Stickers */}
+    {stickers.map((s) => (
+      <Sticker
+        key={s.id}
+        id={s.id}
+        src={s.src}
+        initialXPercent={s.xPercent}
+        initialYPercent={s.yPercent}
+        onDragStop={handleStickerDrag}
+        stickerSize={STICKER_SIZE}
+      />
+    ))}
   </div>
+</div>
+
+
+      </div>
+    </div>
+  </div>
 );
 
 }
