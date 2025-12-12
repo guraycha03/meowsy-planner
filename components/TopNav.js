@@ -28,7 +28,7 @@ export default function TopNav() {
             className="text-2xl font-bold tracking-widest"
             style={{
               fontFamily: "var(--font-appname)", // Patrick Hand
-              color: "#b3633eff",                  // soft accent color
+              color: "#dd786bff",                  // soft accent color
               textShadow: "1px 1px 0 #ffffff, -1px -1px 0 #ffffff", // subtle playful outline
             }}
           >
