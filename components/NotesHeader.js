@@ -16,7 +16,7 @@ export default function NotesHeader({ onAddNote }) {
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
       <h1 className="text-2xl sm:text-3xl font-extrabold text-[#D9A7A4]">
-        My Cutesy Notes
+        My Notes
       </h1>
       
       {/* INTERACTIVE ADD NOTE BUTTON (Fixed Class Structure) */}

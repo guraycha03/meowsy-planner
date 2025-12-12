@@ -69,6 +69,32 @@ export default function Sticker({
     if (onDragStop) onDragStop(id, posRef.current.x, posRef.current.y);
   };
 
+  // RESPONSIVE AUTO-REALIGNING STICKER POSITION
+  useEffect(() => {
+    const content = document.getElementById("virtual-note-content");
+    if (!content) return;
+
+    const updatePosition = () => {
+      const maxX = content.clientWidth - stickerSize;
+      const maxY = content.clientHeight - stickerSize;
+
+      setPos({
+        x: initialXPercent * maxX,
+        y: initialYPercent * maxY
+      });
+    };
+
+    // Run once on load
+    updatePosition();
+
+    // Watch for container resize
+    const resizeObserver = new ResizeObserver(updatePosition);
+    resizeObserver.observe(content);
+
+    return () => resizeObserver.disconnect();
+  }, [initialXPercent, initialYPercent, stickerSize]);
+
+
   const handleDragStart = (e) => {
     e.preventDefault();
     if (e.type === "mousedown" && e.button !== 0) return;
