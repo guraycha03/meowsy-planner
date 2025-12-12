@@ -43,10 +43,17 @@ export default function ChecklistPage() {
     // --- End New States ---
 
     // --- Persistence: Load from Local Storage on Mount ---
-    useEffect(() => {
+      useEffect(() => {
         const savedData = getChecklistData();
-        setChecklistData(savedData);
+        // Schedule state update after mount
+        const id = setTimeout(() => {
+            setChecklistData(savedData);
+        }, 0);
+
+        // Cleanup timeout on unmount
+        return () => clearTimeout(id);
     }, []);
+
 
     // --- Persistence: Save to Local Storage on Update ---
     useEffect(() => {
