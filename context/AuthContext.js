@@ -8,31 +8,47 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Load user from localStorage safely
   useEffect(() => {
-    const saved = localStorage.getItem("localUser");
+    const saved = localStorage.getItem("currentUser");
     if (saved) {
-      // defer setState to next tick
+      // Defer setState to avoid synchronous update in effect
       setTimeout(() => setUser(JSON.parse(saved)), 0);
     }
     setTimeout(() => setLoading(false), 0);
   }, []);
 
   const login = (email) => {
-    const userData = { id: crypto.randomUUID(), email };
-    localStorage.setItem("localUser", JSON.stringify(userData));
-    setTimeout(() => setUser(userData), 0);
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    const existingUser = users.find((u) => u.email === email);
+
+    if (existingUser) {
+      setUser(existingUser);
+      localStorage.setItem("currentUser", JSON.stringify(existingUser));
+      return true;
+    } else {
+      return false;
+    }
   };
 
   const signup = (email, username) => {
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    const existingUser = users.find((u) => u.email === email);
+
+    if (existingUser) {
+      return false;
+    }
+
     const userData = { id: crypto.randomUUID(), email, username };
-    localStorage.setItem("localUser", JSON.stringify(userData));
-    setTimeout(() => setUser(userData), 0);
+    users.push(userData);
+    localStorage.setItem("users", JSON.stringify(users));
+    localStorage.setItem("currentUser", JSON.stringify(userData));
+    setUser(userData);
+    return true;
   };
 
   const logout = () => {
-    localStorage.removeItem("localUser");
-    setTimeout(() => setUser(null), 0);
+    localStorage.removeItem("currentUser");
+    setUser(null);
   };
 
   return (

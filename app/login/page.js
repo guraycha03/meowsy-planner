@@ -3,11 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../context/AuthContext";
+import { useNotification } from "../../context/NotificationContext";
 import { Eye, EyeOff } from "lucide-react";
+import Image from "next/image"; // <-- import Image
+import GridBackground from "../../components/GridBackground";
 
 export default function LoginPage() {
   const router = useRouter();
   const { login, signup } = useAuth();
+  const { notify } = useNotification();
 
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
@@ -27,9 +31,7 @@ export default function LoginPage() {
 
     if (!isLogin) {
       if (!validatePassword()) {
-        setError(
-          "Password must be at least 8 characters and contain letters and numbers."
-        );
+        setError("Password must be at least 8 characters and contain letters and numbers.");
         return;
       }
       if (password !== confirmPass) {
@@ -40,24 +42,37 @@ export default function LoginPage() {
         setError("Username must be at least 3 characters.");
         return;
       }
-      // Sign up
-      signup(email, username);
-      router.push("/");
+
+      const success = signup(email, username);
+      if (success) {
+        notify("Account created successfully!", "success");
+        router.push("/");
+      } else {
+        notify("This email is already registered. Please login.", "error");
+      }
     } else {
-      // Login
-      login(email);
-      router.push("/");
+      const success = login(email);
+      if (success) {
+        notify("Logged in successfully!", "success");
+        router.push("/");
+      } else {
+        notify("No account found with this email. Please sign up first.", "error");
+      }
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen px-4 bg-[var(--color-background)]">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8 space-y-6 relative">
+    <div className="relative flex items-center justify-center min-h-screen px-4 bg-[var(--color-background)]">
+      <GridBackground inContainer={true} />
+
+      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-lg p-8 space-y-6 z-10">
         <div className="flex justify-center">
-          <img
-            src="/images/login-illustration.png"
-            alt="Planner illustration"
-            className="w-40 h-40 object-contain"
+          <Image
+            src={isLogin ? "/images/login-illustration.png" : "/images/signup-illustration.png"}
+            alt={isLogin ? "Login illustration" : "Signup illustration"}
+            width={160}
+            height={160}
+            className="object-contain"
           />
         </div>
 
