@@ -94,13 +94,11 @@ export default function CalendarPage() {
         {months.map((monthDate, idx) => (
           <div key={idx} className="w-full calendar-wrapper">
 
-            <div className="calendar-month-title flex flex-col">
+            <div className="calendar-month-title flex flex-col items-center">
               <span>{formatMonth(monthDate)}</span>
-              <div
-                className="mt-2"
-                style={{ borderBottom: "2px solid var(--color-accent)" }}
-              ></div>
+              <div className="calendar-month-title-divider"></div>
             </div>
+
             <Calendar
               value={currentDate}
               onClickDay={setCurrentDate}
@@ -113,7 +111,6 @@ export default function CalendarPage() {
         ))}
       </div>
 
-      {/* Floating buttons at bottom-right above nav */}
       {/* Floating buttons at bottom-right above nav */}
       <div className="fixed bottom-24 right-4 flex flex-col gap-3 z-20">
 
