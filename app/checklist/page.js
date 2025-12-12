@@ -1,15 +1,17 @@
-// ChecklistPage.js
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react"; 
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Plus, Trash2, CheckSquare, ChevronDown } from "lucide-react";
-import ChecklistItem from "../../components/ChecklistItem"; 
-import { getChecklistData } from "../../lib/checklistUtils"; 
+import { getChecklistData, saveChecklistData, calculateChecklistProgress } from "../../lib/checklistUtils"; 
+import { useAuth } from "../../context/AuthContext";
+
+import ChecklistItem from "../../components/ChecklistItem";
+
 import { useNotification } from "../../context/NotificationContext";
 import ConfirmationModal from "../../components/ConfirmationModal";
 import { v4 as uuidv4 } from "uuid";
 
-// Define colors outside the component so they are not recalculated unnecessarily
+// Define colors outside the component
 const LIGHT_BG_COLORS = [
     "#fff5f1",
     "#edf3e9ff",
@@ -18,54 +20,83 @@ const LIGHT_BG_COLORS = [
     "#f7f0ff"
 ];
 
-// Define the duration for a long press in milliseconds (UX best practice is ~500ms)
-const LONG_PRESS_DURATION = 500; 
+const LONG_PRESS_DURATION = 500;
 
 export default function ChecklistPage() {
-    
-    const [bgColor, setBgColor] = useState(LIGHT_BG_COLORS[0]); 
+
+    const { user, loading } = useAuth(); 
+
+    const [bgColor, setBgColor] = useState(LIGHT_BG_COLORS[0]);
     const { showNotification } = useNotification();
     const [checklistData, setChecklistData] = useState([]);
     const [newCategoryTitle, setNewCategoryTitle] = useState("");
     const [collapsedCategories, setCollapsedCategories] = useState({});
     
-    // --- New States for Deletion Modal Logic ---
+    // Deletion Modal Logic
     const [isModalOpen, setIsModalOpen] = useState(false);
-    // Tracks the context for the modal: 'clearCompleted' or 'deleteCategory'
-    const [modalContext, setModalContext] = useState(null); 
-    // Tracks the ID of the category to delete
-    const [categoryToDeleteId, setCategoryToDeleteId] = useState(null); 
+    const [modalContext, setModalContext] = useState(null);
+    const [categoryToDeleteId, setCategoryToDeleteId] = useState(null);
 
-    // Ref to manage the long-press timer
-    const longPressTimerRef = useRef(null); 
-    // State to visually indicate which category is in "edit/delete mode"
-    const [deleteModeCategoryId, setDeleteModeCategoryId] = useState(null); 
-    // --- End New States ---
+    // Mobile Gesture Logic
+    const longPressTimerRef = useRef(null);
+    const [deleteModeCategoryId, setDeleteModeCategoryId] = useState(null);
 
-    // --- Persistence: Load from Local Storage on Mount ---
-      useEffect(() => {
-        const savedData = getChecklistData();
-        // Schedule state update after mount
-        const id = setTimeout(() => {
-            setChecklistData(savedData);
-        }, 0);
-
-        // Cleanup timeout on unmount
-        return () => clearTimeout(id);
-    }, []);
-
-
-    // --- Persistence: Save to Local Storage on Update ---
-    useEffect(() => {
-        if (checklistData.length > 0 || localStorage.getItem("plannerChecklist")) {
-            localStorage.setItem("plannerChecklist", JSON.stringify(checklistData));
+    // Function to load the checklist data
+    const loadData = (currentUserId) => {
+        if (!currentUserId || typeof window === 'undefined') {
+            setChecklistData([]);
+            return;
         }
-        window.dispatchEvent(new Event('storage'));
-    }, [checklistData]);
+        const savedData = getChecklistData(currentUserId);
+        setChecklistData(savedData);
+    };
+
+
+
+    // 1. Load Data Effect: Load from Local Storage on Mount/User Change
+    useEffect(() => {
+      if (!loading && user?.id) {
+        (async () => {
+          const savedData = getChecklistData(user.id);
+          setChecklistData(savedData);
+        })();
+      }
+    }, [user, loading]);
+
+
+// Save checklist whenever it changes
+useEffect(() => {
+  if (!loading && user?.id) {
+    saveChecklistData(user.id, checklistData);
+  }
+}, [checklistData, user, loading]);
+
+// Cross-tab sync
+useEffect(() => {
+  if (!user?.id) return;
+
+  const handleStorageChange = (e) => {
+    if (e.key === `plannerChecklist_${user.id}`) {
+      loadData(user.id);
+    }
+  };
+
+  window.addEventListener("storage", handleStorageChange);
+  return () => window.removeEventListener("storage", handleStorageChange);
+}, [user?.id]);
+
+
+
+
+
+    // Recalculate completed tasks using useMemo for efficiency
+    const completedTasks = useMemo(() => 
+      checklistData.flatMap(c => c.items).filter(i => i.completed).length
+  , [checklistData]);
+
 
 
     const toggleItem = (categoryId, itemId) => {
-        // ... (toggleItem remains the same) ...
         let wasCompleted;
         let itemText = '';
 
@@ -73,9 +104,9 @@ export default function ChecklistPage() {
             if (category.id === categoryId) {
                 const updatedItems = category.items.map(item => {
                     if (item.id === itemId) {
-                        wasCompleted = item.completed; // Capture current state (before change)
+                        wasCompleted = item.completed;
                         itemText = item.text;
-                        return { ...item, completed: !item.completed }; // Toggle state
+                        return { ...item, completed: !item.completed };
                     }
                     return item;
                 });
@@ -100,7 +131,6 @@ export default function ChecklistPage() {
             return;
         }
 
-        // State update
         setChecklistData(prevData =>
             prevData.map(category => {
                 if (category.id === categoryId) {
@@ -113,7 +143,6 @@ export default function ChecklistPage() {
             })
         );
         
-        // Notification (executed once)
         showNotification(`Added new task: "${trimmedText}".`, 'success');
     };
 
@@ -135,21 +164,17 @@ export default function ChecklistPage() {
         showNotification(`New list created: "${trimmedTitle}"!`, 'success');
     };
     
-    // --- CATEGORY DELETION LOGIC (NEW) ---
+    // --- CATEGORY DELETION LOGIC ---
 
-    // 1. Function to open the category deletion confirmation modal
     const handleCategoryDeleteRequest = (categoryId) => {
         const category = checklistData.find(c => c.id === categoryId);
         if (!category) return;
         
         setCategoryToDeleteId(categoryId);
         setModalContext('deleteCategory');
-        
-        // Open the modal
-        setIsModalOpen(true); 
+        setIsModalOpen(true);
     };
 
-    // 2. Function to execute deletion upon confirmation
     const performDeleteCategory = () => {
         const categoryTitle = checklistData.find(c => c.id === categoryToDeleteId)?.title || 'list';
         setChecklistData(prevData =>
@@ -157,65 +182,53 @@ export default function ChecklistPage() {
         );
         showNotification(`List deleted: "${categoryTitle}"!`, 'error');
         setCategoryToDeleteId(null);
-        handleModalClose(); // Use the general closer
+        handleModalClose();
     };
 
-    // 3. Helper to reset all modal states
     const handleModalClose = () => {
         setIsModalOpen(false);
         setModalContext(null);
         setCategoryToDeleteId(null);
     };
 
-    // --- MOBILE GESTURE LOGIC (NEW) ---
+    // --- MOBILE GESTURE LOGIC ---
 
-    // 1. Start the long press timer
     const handleLongPressStart = (e, categoryId) => {
-        // Prevent default text selection on desktop/mobile hold
         e.preventDefault(); 
         
-        // Clear any existing timer just in case
         clearTimeout(longPressTimerRef.current);
         
-        // Set a timer for LONG_PRESS_DURATION
         longPressTimerRef.current = setTimeout(() => {
             setDeleteModeCategoryId(categoryId);
             showNotification("Long press detected! Press the red trash icon to delete.", 'warning');
         }, LONG_PRESS_DURATION);
     };
 
-    // 2. Clear the timer if the click/touch is released too early (i.e., it's a regular click)
-    const handlePressEnd = (categoryId) => {
+    const handlePressEnd = () => {
         clearTimeout(longPressTimerRef.current);
     };
 
-    // 3. Toggle collapse on a regular click/tap, but prevent it if the category is in delete mode
     const handleCategoryClick = (categoryId) => {
-        // If we are already in delete mode, a click should open the delete modal for quick action
         if (deleteModeCategoryId === categoryId) {
             handleCategoryDeleteRequest(categoryId);
-            // After modal opens, reset the delete mode
             setDeleteModeCategoryId(null); 
             return;
         }
         
-        // If we are not in delete mode, perform the regular collapse toggle
         toggleCollapse(categoryId);
     };
     
-    // --- CLEAR COMPLETED LOGIC (UPDATED to use modal context) ---
+    // --- CLEAR COMPLETED LOGIC ---
     
-    // 1. Function to open the confirmation modal for clearing tasks
     const handleClearCompletedClick = () => {
         if (completedTasks === 0) {
             showNotification("No completed tasks to clear.", 'warning');
             return;
         }
         setModalContext('clearCompleted');
-        setIsModalOpen(true); 
+        setIsModalOpen(true);
     };
 
-    // 2. Function that executes deletion upon confirmation
     const performClearCompleted = () => {
         setChecklistData(prevData =>
             prevData.map(category => ({
@@ -224,10 +237,9 @@ export default function ChecklistPage() {
             }))
         );
         showNotification(`Successfully cleared ${completedTasks} completed tasks!`, 'success');
-        handleModalClose(); 
+        handleModalClose();
     };
     
-    // 3. Determine which confirmation function to run based on the context
     const handleModalConfirm = () => {
         if (modalContext === 'clearCompleted') {
             performClearCompleted();
@@ -236,9 +248,6 @@ export default function ChecklistPage() {
         }
     };
     
-    // --- END LOGIC UPDATES ---
-
-
     const toggleCollapse = (categoryId) => {
         setCollapsedCategories(prev => ({
             ...prev,
@@ -246,14 +255,6 @@ export default function ChecklistPage() {
         }));
     };
     
-    const getCompletedTasks = () =>
-        checklistData.flatMap(c => c.items).filter(item => item.completed).length;
-
-    // Usage
-    const completedTasks = getCompletedTasks();
-
-
-
     const buttonBase = "p-3 rounded-xl shadow-md transition-all duration-200 active:scale-[0.98] focus:outline-none";
 
     // Dynamic Modal Content
@@ -276,28 +277,59 @@ export default function ChecklistPage() {
     };
     const modalContent = getModalContent();
 
+    // Show a loading or prompt screen if the user data hasn't loaded yet
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <p className="text-xl font-semibold text-[var(--color-accent)]">Loading Checklist...</p>
+            </div>
+        );
+    }
+    
+    // Show a prompt if no user is logged in
+    if (!user) {
+        return (
+            <div 
+                className="flex flex-col items-center justify-center min-h-screen w-full px-4 sm:px-6 py-8 relative transition-colors duration-1000"
+                style={{ backgroundColor: bgColor }}
+            >
+                <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 text-center">
+                    <h2 className="text-2xl font-bold mb-4 text-[var(--color-dark-green)]">Access Denied</h2>
+                    <p className="text-gray-700 mb-6">You must be logged in to view and manage your personal checklist.</p>
+                    <button
+                        onClick={() => { /* In a real app, this should link to your /login page */}} 
+                        className={`${buttonBase} bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-dark)] px-6 py-3`}
+                    >
+                        Go to Login Page
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+
     return (
         <div 
             className="flex flex-col items-center min-h-screen w-full px-4 sm:px-6 py-8 relative transition-colors duration-1000 pb-24"
             style={{ backgroundColor: bgColor }} 
         >
             
-            {/* 📝 Page Title: Consistent Styling */}
-            <div className="w-full max-w-4xl pt-16 pb-3 px-4 sm:px-0 relative">
+            {/* Page Title */}
+            <div className="w-full max-w-4xl pt-6 pb-3 px-4 sm:px-0 relative">
                 <header className="page-title-label">
                     Checklist 
                 </header>
             </div>
-            
+
             {/* MAIN CONTENT AREA */}
-            <div className="mt-[30px] w-full max-w-4xl flex flex-col gap-6 pb-4"> 
-                
+            <div className="mt-4 w-full max-w-4xl flex flex-col gap-6 pb-4">
+
                 {/* TOP CONTROLS */}
                 {checklistData.length > 0 && (
                     <div className="flex justify-between items-center w-full">
                         <h2 className="text-2xl font-bold text-[var(--color-foreground)] hidden sm:block">Task Categories</h2>
                         
-                        {/* Clear Completed Button (Calls the handler to open the modal) */}
+                        {/* Clear Completed Button */}
                         <button
                             onClick={handleClearCompletedClick}
                             disabled={completedTasks === 0}
@@ -325,15 +357,14 @@ export default function ChecklistPage() {
                             {/* Category Header (Interactive and Engaging Button Style) */}
                             <div 
                                 className="flex justify-between items-center p-4 cursor-pointer bg-[var(--color-accent-light)] hover:bg-[var(--color-accent-light)/80] transition-colors duration-150 active:scale-[0.99]"
-                                // Standard click handler (handles collapse or opens delete modal)
                                 onClick={() => handleCategoryClick(category.id)}
-                                // Long press handlers for mobile (touch) and desktop (mouse)
+                                // Long press handlers
                                 onTouchStart={(e) => handleLongPressStart(e, category.id)}
-                                onTouchEnd={() => handlePressEnd(category.id)}
-                                onTouchCancel={() => handlePressEnd(category.id)}
+                                onTouchEnd={handlePressEnd}
+                                onTouchCancel={handlePressEnd}
                                 onMouseDown={(e) => handleLongPressStart(e, category.id)}
-                                onMouseUp={() => handlePressEnd(category.id)}
-                                onMouseLeave={() => handlePressEnd(category.id)}
+                                onMouseUp={handlePressEnd}
+                                onMouseLeave={handlePressEnd}
                             >
                                 <h3 className="text-xl font-bold text-[var(--color-dark-green)]">
                                     {category.title}
@@ -344,7 +375,7 @@ export default function ChecklistPage() {
                                     // DELETE BUTTON APPEARS ON LONG PRESS
                                     <button
                                         onClick={(e) => {
-                                            e.stopPropagation(); // Prevent the main click handler from running
+                                            e.stopPropagation();
                                             handleCategoryDeleteRequest(category.id);
                                         }}
                                         className="p-2 rounded-full bg-red-500 text-white hover:bg-red-600 active:scale-95 transition-all"
@@ -422,13 +453,11 @@ export default function ChecklistPage() {
                 </form>
             </div>
             
-            {/* -------------------------------------- */}
             {/* CONFIRMATION MODAL INTEGRATION */}
-            {/* -------------------------------------- */}
             <ConfirmationModal
                 isOpen={isModalOpen}
                 onClose={handleModalClose}
-                onConfirm={handleModalConfirm} // Runs the appropriate confirm function
+                onConfirm={handleModalConfirm}
                 title={modalContent.title || "Confirm Action"}
                 message={modalContent.message || "Are you sure you want to proceed?"}
                 confirmText={modalContent.confirmText || "Confirm"}

@@ -11,11 +11,11 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const saved = localStorage.getItem("currentUser");
     if (saved) {
-      // Defer setState to avoid synchronous update in effect
       setTimeout(() => setUser(JSON.parse(saved)), 0);
     }
     setTimeout(() => setLoading(false), 0);
   }, []);
+
 
   const login = (email) => {
     const users = JSON.parse(localStorage.getItem("users") || "[]");
