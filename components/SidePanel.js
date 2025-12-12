@@ -2,89 +2,89 @@
 
 import { useAuth } from "../context/AuthContext";
 import { useRouter } from "next/navigation";
+import { Settings, Archive, HelpCircle, Info, LogOut, X } from "lucide-react";
 
 export default function SidePanel({ isOpen, onClose }) {
   const router = useRouter();
-  const { logout } = useAuth(); // use AuthContext logout
+  const { user, logout } = useAuth();
 
   if (!isOpen) return null;
 
+  // Tool buttons: dusty/muted accent palette
+  const buttonClasses = `flex items-center gap-3 p-3 bg-[var(--color-accent-dark2)] text-white rounded-xl shadow
+    hover:bg-[var(--color-accent-dark)] hover:scale-105 hover:shadow-lg transition-all duration-200`;
+
+  // Logout button: soft muted red from palette
+  // Logout button: soft muted red
+  // Logout button: soft, appealing red
+const logoutClasses = `flex items-center gap-3 p-3 bg-red-500/80 text-white rounded-xl shadow
+  hover:bg-red-500/90 hover:scale-105 hover:shadow-lg transition-all duration-200 mt-4`;
+
+  // Close button: soft gray from palette
+  const closeClasses = `flex items-center gap-3 mt-4 p-3 bg-[var(--color-muted)] rounded-xl
+    hover:bg-[var(--color-accent-light2)] transition-all duration-200`;
+
   return (
-    <div
-      className="fixed inset-0 flex justify-end z-1000"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-[1000] flex justify-end">
+      {/* Frozen glass overlay */}
       <div
-        className="bg-[var(--color-accent-light)] w-72 h-full p-6 shadow-lg flex flex-col space-y-4"
+        className="absolute inset-0 bg-[rgba(255,255,255,0.08)] backdrop-blur-[1px] transition-opacity duration-300"
+        onClick={onClose}
+      />
+
+      {/* Panel */}
+      <div
+        className="relative bg-gradient-to-b from-[var(--color-accent-light2)] to-[var(--color-accent-light)] w-72 h-full p-6 shadow-2xl flex flex-col space-y-6 transform transition-transform duration-300"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-xl font-bold text-[var(--color-foreground)]">Menu</h2>
+        {/* Profile Card */}
+        {user && (
+          <div className="bg-white p-4 rounded-2xl shadow flex flex-col items-center gap-2">
+            <div className="w-16 h-16 rounded-full bg-[var(--color-accent)] flex items-center justify-center text-white font-bold text-xl">
+              {user.username ? user.username[0].toUpperCase() : "U"}
+            </div>
+            <h3 className="font-bold text-lg text-[var(--color-foreground)]">
+              {user.username || "User"}
+            </h3>
+            <p className="text-sm text-[var(--color-text-dark)] truncate">{user.email}</p>
+          </div>
+        )}
 
-        {/* Account & Profile */}
-        <button
-          className="p-2 bg-[var(--color-accent)] text-white rounded-lg hover:scale-105 transition-transform"
-          onClick={() => router.push("/profile")}
-        >
-          Profile
-        </button>
-        <button
-          className="p-2 bg-[var(--color-accent)] text-white rounded-lg hover:scale-105 transition-transform"
-          onClick={() => router.push("/account-settings")}
-        >
-          Account Settings
-        </button>
+        {/* Tools */}
+        <div className="flex flex-col gap-3">
+          <button className={buttonClasses} onClick={() => router.push("/account-settings")}>
+            <Settings size={20} /> Account Settings
+          </button>
+          <button className={buttonClasses} onClick={() => router.push("/export-backup")}>
+            <Archive size={20} /> Export / Backup
+          </button>
+          <button className={buttonClasses} onClick={() => router.push("/help")}>
+            <HelpCircle size={20} /> Help & FAQ
+          </button>
+          <button className={buttonClasses} onClick={() => router.push("/about")}>
+            <Info size={20} /> About / Version
+          </button>
+        </div>
 
-        {/* Export / Help */}
+        {/* Logout */}
+        {/* Logout */}
         <button
-          className="p-2 bg-[var(--color-accent)] text-white rounded-lg hover:scale-105 transition-transform"
-          onClick={() => router.push("/export-backup")}
-        >
-          Export / Backup
-        </button>
-        <button
-          className="p-2 bg-[var(--color-accent)] text-white rounded-lg hover:scale-105 transition-transform"
-          onClick={() => router.push("/help")}
-        >
-          Help & FAQ
-        </button>
-        <button
-          className="p-2 bg-[var(--color-accent)] text-white rounded-lg hover:scale-105 transition-transform"
-          onClick={() => router.push("/about")}
-        >
-          About / Version
-        </button>
-
-        {/* Logout button */}
-        <button
-          className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-transform"
+          className={logoutClasses}
           onClick={() => {
-            logout();           // call your AuthContext logout
-            router.push("/login"); // redirect after logout
+            logout();
+            router.push("/login");
           }}
         >
-          Log Out
+          <LogOut size={20} /> Log Out
         </button>
 
-        {/* Spacer */}
+
+
         <div className="flex-1"></div>
 
-        {/* Preview NoteCard */}
-        <button
-          onClick={() => {
-            onClose();
-            router.push("/preview-note");
-          }}
-          className="p-2 bg-[var(--color-accent)] text-white rounded-lg hover:scale-105 transition-transform"
-        >
-          Preview NoteCard
-        </button>
-
-        {/* Close menu */}
-        <button
-          className="mt-2 p-2 bg-gray-300 rounded-lg hover:bg-gray-400"
-          onClick={onClose}
-        >
-          Close
+        {/* Close */}
+        <button className={closeClasses} onClick={onClose}>
+          <X size={20} /> Close
         </button>
       </div>
     </div>

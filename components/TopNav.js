@@ -24,9 +24,17 @@ export default function TopNav() {
         {/* Left: Logo + App name */}
         <div className="flex items-center gap-3">
           <Image src="/images/meowsy-cat.png" alt="Meowsy" width={36} height={36} />
-          <h1 className="text-2xl font-bold" style={{ fontFamily: "var(--font-appname)" }}>
+          <h1
+            className="text-2xl font-bold tracking-widest"
+            style={{
+              fontFamily: "var(--font-appname)", // Patrick Hand
+              color: "#b3633eff",                  // soft accent color
+              textShadow: "1px 1px 0 #ffffff, -1px -1px 0 #ffffff", // subtle playful outline
+            }}
+          >
             Meowsy
           </h1>
+
         </div>
 
         {/* Right: Icons + 3-dot menu */}
