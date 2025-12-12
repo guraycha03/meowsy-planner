@@ -196,39 +196,54 @@ button, input, textarea, select { user-select: auto; cursor: pointer; }
 
 
 
-/* Remove dot underline from weekdays */
-.react-calendar__month-view__weekdays abbr {
-  text-decoration: none !important;
-  font-family: var(--font-sans), cursive;
-}
+
 
 
 /* Calendar tiles */
+/* Calendar tiles - weekdays default */
 .react-calendar__tile abbr {
-  display: inline-flex !important;        /* inline-flex keeps width & height tied */
+  display: inline-flex !important;
   justify-content: center;
   align-items: center;
-  aspect-ratio: 1 / 1;                    /* ensures square shape */
-  width: 100%;                             /* full width of parent */
-  max-width: 60px;                         /* limit max size on small screens */
-  min-width: 40px;                         /* ensure small but readable tiles */
-  height: auto !important;                 /* let aspect-ratio control height */
-  border-radius: 20%;                      /* subtle rounding */
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  max-width: 60px;
+  min-width: 40px;
+  height: auto !important;
+  border-radius: 20%;
   font-weight: bold;
   font-family: var(--font-sans), cursive;
   font-size: 1.5rem;
   color: var(--color-foreground);
-  background-color: var(--color-background);
+  background-color: var(--color-background); /* weekday background */
   transition: all 0.3s ease;
 }
 
-.react-calendar__tile:hover abbr {
+.react-calendar__tile abbr:hover {
   background-color: var(--color-accent-light);
   color: var(--color-foreground);
   cursor: pointer;
   border-radius: 30%;
 }
 
+/* Weekend tiles (Saturday & Sunday) - should come AFTER the general tile rule */
+.react-calendar__month-view__days__day--weekend abbr {
+  background-color: var(--color-accent-light2) !important; /* distinct weekend color */
+  color: var(--color-foreground);
+  border-radius: 20%;
+}
+
+.react-calendar__month-view__days__day--weekend abbr:hover {
+  background-color: var(--color-accent-light) !important;
+}
+
+
+
+/* Remove dot underline from weekdays */
+.react-calendar__month-view__weekdays abbr {
+  text-decoration: none !important;
+  font-family: var(--font-sans), cursive;
+}
 
 
 /* Set lighter custom backgrounds for active/current dates */
@@ -251,11 +266,12 @@ button, input, textarea, select { user-select: auto; cursor: pointer; }
 }
 
 .react-calendar .react-calendar__tile--now abbr {
-  background-color: var(--color-accent-light2) !important;
-  color: var(--color-foreground) !important;
+  background-color: var(--color-accent) !important; /* your new color */
+  color: var(--color-background) !important;       /* ensure text is readable */
   border-radius: 30% !important;
   border: 2px solid var(--color-muted) !important;
 }
+
 
 
 @media (min-width: 640px) {
