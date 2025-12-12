@@ -91,12 +91,6 @@ button, input, textarea, select { user-select: auto; cursor: pointer; }
 }
 
 
-
-
-
-
-
-
 /* Calendar page container */
 .calendar-page-container {
   position: relative;
@@ -130,12 +124,19 @@ button, input, textarea, select { user-select: auto; cursor: pointer; }
   box-shadow: 0 6px 16px rgba(0,0,0,0.2);
 }
 
-/* Calendar wrapper */
+/* Calendar wrapper: remove background and padding */
 .calendar-wrapper {
-  background-color: var(--color-calendar-bg);
-  border-radius: 20px;
-  padding: 16px;
+  background-color: transparent; /* was var(--color-calendar-bg) */
+  border-radius: 0; /* optional */
+  padding: 0;       /* remove inner padding */
+  margin-bottom: 2rem; /* optional: smaller spacing between months */
 }
+
+/* Remove extra margin from last month */
+.calendar-wrapper:last-child {
+  margin-bottom: 0;
+}
+
 
 /* React calendar main */
 .react-calendar {
