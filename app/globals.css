@@ -100,29 +100,6 @@ button, input, textarea, select { user-select: auto; cursor: pointer; }
   padding-top: 0;
 }
 
-/* Floating Today button */
-.floating-today-button {
-  position: fixed;
-  top: 80px;
-  left: 20px;
-  background-color: var(--color-accent);
-  color: var(--color-foreground);
-  border: none;
-  border-radius: 50px;
-  padding: 8px 16px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  cursor: pointer;
-  z-index: 10;
-  transition: all 0.3s ease;
-}
-
-.floating-today-button:hover {
-  background-color: var(--color-accent-dark);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.2);
-}
 
 /* Calendar wrapper: remove background and padding */
 .calendar-wrapper {
@@ -137,6 +114,32 @@ button, input, textarea, select { user-select: auto; cursor: pointer; }
   margin-bottom: 0;
 }
 
+/* Floating buttons softer colors */
+.floating-button-softer {
+  font-weight: 600;
+  border-radius: 50px;
+  padding: 8px 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transition: all 0.3s ease;
+}
+
+/* Softer "Add Event" */
+.bg-soft-accent {
+  background-color: var(--color-accent) !important;
+  color: var(--color-foreground);
+}
+.bg-soft-accent:hover {
+  background-color: var(--color-accent-dark) !important;
+}
+
+/* Softer "Today" button */
+.bg-soft-green {
+  background-color: var(--color-green) !important;
+  color: var(--color-background);
+}
+.bg-soft-green:hover {
+  background-color: var(--color-dark-green) !important;
+}
 
 /* React calendar main */
 .react-calendar {
