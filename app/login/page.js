@@ -11,7 +11,7 @@ import GridBackground from "../../components/GridBackground";
 export default function LoginPage() {
   const router = useRouter();
   const { login, signup } = useAuth();
-  const { notify } = useNotification();
+  const { showNotification } = useNotification(); // ✅ correct
 
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
@@ -45,18 +45,18 @@ export default function LoginPage() {
 
       const success = signup(email, username);
       if (success) {
-        notify("Account created successfully!", "success");
-        router.push("/");
+        showNotification("Account created successfully!", "success");
       } else {
-        notify("This email is already registered. Please login.", "error");
+        showNotification("This email is already registered. Please login.", "error");
       }
+
     } else {
       const success = login(email);
       if (success) {
-        notify("Logged in successfully!", "success");
+        showNotification("Logged in successfully!", "success");
         router.push("/");
       } else {
-        notify("No account found with this email. Please sign up first.", "error");
+        showNotification("No account found with this email. Please sign up first.", "error");
       }
     }
   };

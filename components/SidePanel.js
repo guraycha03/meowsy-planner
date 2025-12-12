@@ -2,7 +2,7 @@
 
 import { useAuth } from "../context/AuthContext";
 import { useRouter } from "next/navigation";
-import { Settings, Archive, HelpCircle, Info, LogOut, X } from "lucide-react";
+import { Settings, Archive, HelpCircle, Info, LogOut } from "lucide-react";
 
 export default function SidePanel({ isOpen, onClose }) {
   const router = useRouter();
@@ -14,15 +14,9 @@ export default function SidePanel({ isOpen, onClose }) {
   const buttonClasses = `flex items-center gap-3 p-3 bg-[var(--color-accent-dark2)] text-white rounded-xl shadow
     hover:bg-[var(--color-accent-dark)] hover:scale-105 hover:shadow-lg transition-all duration-200`;
 
-  // Logout button: soft muted red from palette
   // Logout button: soft muted red
-  // Logout button: soft, appealing red
-const logoutClasses = `flex items-center gap-3 p-3 bg-red-500/80 text-white rounded-xl shadow
-  hover:bg-red-500/90 hover:scale-105 hover:shadow-lg transition-all duration-200 mt-4`;
-
-  // Close button: soft gray from palette
-  const closeClasses = `flex items-center gap-3 mt-4 p-3 bg-[var(--color-muted)] rounded-xl
-    hover:bg-[var(--color-accent-light2)] transition-all duration-200`;
+  const logoutClasses = `flex items-center gap-3 p-3 bg-red-500/80 text-white rounded-xl shadow
+    hover:bg-red-500/90 hover:scale-105 hover:shadow-lg transition-all duration-200 mt-4`;
 
   return (
     <div className="fixed inset-0 z-[1000] flex justify-end">
@@ -34,7 +28,7 @@ const logoutClasses = `flex items-center gap-3 p-3 bg-red-500/80 text-white roun
 
       {/* Panel */}
       <div
-        className="relative bg-gradient-to-b from-[var(--color-accent-light2)] to-[var(--color-accent-light)] w-72 h-full p-6 shadow-2xl flex flex-col space-y-6 transform transition-transform duration-300"
+        className="relative bg-gradient-to-b from-[var(--color-accent-light2)] to-[var(--color-accent-light)] w-72 h-full p-6 shadow-2xl flex flex-col space-y-4 transform transition-transform duration-300"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Profile Card */}
@@ -66,26 +60,18 @@ const logoutClasses = `flex items-center gap-3 p-3 bg-red-500/80 text-white roun
           </button>
         </div>
 
-        {/* Logout */}
-        {/* Logout */}
-        <button
-          className={logoutClasses}
-          onClick={() => {
-            logout();
-            router.push("/login");
-          }}
-        >
-          <LogOut size={20} /> Log Out
-        </button>
-
-
-
-        <div className="flex-1"></div>
-
-        {/* Close */}
-        <button className={closeClasses} onClick={onClose}>
-          <X size={20} /> Close
-        </button>
+        {/* Logout button only shows if logged in */}
+        {user && (
+          <button
+            className={logoutClasses}
+            onClick={() => {
+              logout();
+              router.push("/login");
+            }}
+          >
+            <LogOut size={20} /> Log Out
+          </button>
+        )}
       </div>
     </div>
   );
