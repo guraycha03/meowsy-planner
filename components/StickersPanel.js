@@ -16,7 +16,7 @@ export default function StickersPanel({ onAddSticker }) {
     { name: "Blue Flower", src: "/stickers/blue-flower.png" },
     { name: "Ghost", src: "/stickers/ghost.png" },
     { name: "Rabbit", src: "/stickers/rabbit.png" },
-    { name: "Bear", src: "/stickers/bear.png" },
+    { name: "Lollipop", src: "/stickers/lollipop.png" },
     { name: "Goose", src: "/stickers/goose.png" },
     { name: "Heart", src: "/stickers/heart.png" },
     { name: "Blue Bird", src: "/stickers/blue-bird.png" },

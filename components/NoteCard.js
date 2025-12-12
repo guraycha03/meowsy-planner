@@ -30,13 +30,15 @@ export const NOTE_STYLES = [
  */
 const CommonCardHeader = ({ noteStyle, children, className = "", customStyle = {} }) => (
   <div
-    // Merging base font color from noteStyle with custom styles and classes
+    // Merging base font color, applying 'Patrick Hand' font, and adding letter spacing
     className={`px-4 py-3 font-semibold text-lg z-10 ${className}`}
-    style={{ color: noteStyle.fontColor, ...customStyle }}
+    style={{ 
+      color: noteStyle.fontColor, 
+      fontFamily: `'Patrick Hand', cursive`, 
+      letterSpacing: '0.02em', // ADDED: Subtle letter spacing for the title
+      ...customStyle 
+    }}
   >
-    {/* REMOVED: <span role="img" aria-label="cute heart">💖</span> 
-        The heart emoji is now removed, leaving only the note title.
-    */}
     {children ?? "Untitled Note"}
   </div>
 );
@@ -51,8 +53,13 @@ const CommonCardHeader = ({ noteStyle, children, className = "", customStyle = {
 const CommonCardContent = ({ children, className = "", style = {} }) => (
   <div
     className={`p-4 flex-1 text-sm leading-relaxed z-5 relative ${className}`}
-    // Base font color for content is hardcoded unless overridden by specific style props
-    style={{ color: '#4B3C34', ...style }}
+    // Base font color for content, applying 'Patrick Hand' font, and adding letter spacing
+    style={{ 
+      color: '#4B3C34', 
+      fontFamily: `'Patrick Hand', cursive`, 
+      letterSpacing: '0.05em', // ADDED: More noticeable letter spacing for content/preview
+      ...style 
+    }}
   >
     {children}
   </div>
@@ -135,7 +142,6 @@ export default function NoteCard({ styleId, title, children, href }) {
             backgroundImage: `repeating-linear-gradient(to bottom, transparent, transparent 20px, #a5d8ff 21px, #a5d8ff 22px)`,
             lineHeight: '23px', 
             paddingTop: '1.5rem',
-            fontFamily: '"Kalam", cursive',
           }}
         >
           {children}
@@ -152,7 +158,7 @@ export default function NoteCard({ styleId, title, children, href }) {
         className={`${baseClasses} rounded-xl shadow-md p-0 overflow-hidden bg-white`} 
         style={customStyles}
       >
-        {/* Header with grid pattern (defined directly in JSX for unique style) */}
+        {/* Header with grid pattern (Note: This is one of the exceptions that keeps its unique font) */}
         <div 
           className="h-10 flex items-center px-4 relative" 
           style={{
@@ -161,11 +167,20 @@ export default function NoteCard({ styleId, title, children, href }) {
             backgroundImage: `linear-gradient(90deg, ${style.borderColor} 1px, transparent 1px), 
                               linear-gradient(180deg, ${style.borderColor} 1px, transparent 1px)`,
             backgroundSize: '15px 15px',
-            fontFamily: '"Parisienne", cursive',
+            fontFamily: '"Parisienne", cursive', // KEEPING unique header font for design
             color: style.fontColor
           }}
         >
-          <span className="font-bold text-lg">{title}</span>
+          {/* Apply Patrick Hand and letter spacing directly to the title span */}
+          <span 
+            className="font-bold text-lg" 
+            style={{ 
+              fontFamily: `'Patrick Hand', cursive`,
+              letterSpacing: '0.02em', 
+            }}
+          >
+            {title}
+          </span>
           {/* Separator line, using the header font color which is now softer */}
           <div 
             className="absolute bottom-0 left-0 right-0 h-0.5 opacity-50" 
@@ -173,7 +188,10 @@ export default function NoteCard({ styleId, title, children, href }) {
           ></div>
         </div>
         
-        <CommonCardContent className="font-[Kalam] pt-4">{children}</CommonCardContent>
+        {/* Content area now uses 'Patrick Hand' and letter spacing via CommonCardContent's default */}
+        <CommonCardContent className="pt-4">
+          {children}
+        </CommonCardContent>
       </a>
     );
   }
@@ -224,12 +242,14 @@ export default function NoteCard({ styleId, title, children, href }) {
           style={{
             backgroundImage: `repeating-linear-gradient(45deg, ${style.borderColor} 0, ${style.borderColor} 10px, ${style.headerColor} 10px, ${style.headerColor} 20px)`,
             color: style.fontColor,
-            fontFamily: '"Parisienne", cursive',
+            fontFamily: `'Patrick Hand', cursive`, // Applied the font here
+            letterSpacing: '0.02em', // ADDED: Letter spacing for the title
           }}
         >
           {title}
         </div>
-        <CommonCardContent className="font-[Kalam]">{children}</CommonCardContent>
+        {/* Content area now uses 'Patrick Hand' and letter spacing via CommonCardContent's default */}
+        <CommonCardContent>{children}</CommonCardContent>
       </a>
     );
   }
