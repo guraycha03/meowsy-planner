@@ -11,7 +11,7 @@ export default function SidePanel({ isOpen, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 flex justify-end z-40"
+      className="fixed inset-0 flex justify-end z-1000"
       onClick={onClose}
     >
       <div

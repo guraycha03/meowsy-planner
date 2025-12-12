@@ -9,11 +9,18 @@ export default function StickersPanel({ onAddSticker }) {
 
   const stickerList = [
     { name: "Sky", src: "/stickers/sky.png" },
+    { name: "Strawberry", src: "/stickers/strawberry.png" },
+    { name: "Flower", src: "/stickers/flower.png" },
+    { name: "Half Moon", src: "/stickers/half-moon.png" },
+    { name: "Cute Bear", src: "/stickers/cute-bear.png" },
+    { name: "Blue Flower", src: "/stickers/blue-flower.png" },
+    { name: "Ghost", src: "/stickers/ghost.png" },
     { name: "Rabbit", src: "/stickers/rabbit.png" },
     { name: "Bear", src: "/stickers/bear.png" },
     { name: "Goose", src: "/stickers/goose.png" },
     { name: "Heart", src: "/stickers/heart.png" },
-    { name: "Blue Flower", src: "/stickers/blue-flower.png" },
+    { name: "Blue Bird", src: "/stickers/blue-bird.png" },
+
   ];
 
   // Close panel when clicking outside
@@ -30,9 +37,8 @@ export default function StickersPanel({ onAddSticker }) {
   return (
     <div
       ref={panelRef}
-      className="fixed top-1/2 right-6 z-[9999] transform -translate-y-1/2 flex items-center"
+      className="fixed top-1/2 right-6 z-[100] transform -translate-y-1/2 flex items-center"
     >
-
       {/* Toggle button */}
       <button
         onClick={() => setOpen(!open)}
@@ -49,8 +55,8 @@ export default function StickersPanel({ onAddSticker }) {
 
       {/* Sliding panel content */}
       <div
-        className={`transition-all duration-300 overflow-hidden bg-white shadow-xl border-l rounded-l-xl
-          ${open ? "w-28 p-3 ml-1" : "w-0 p-0 ml-0"}`}
+        className={`transition-all duration-300 overflow-hidden bg-white shadow-xl rounded-l-xl
+          ${open ? "w-28 p-3 ml-1 border border-[var(--color-muted)] max-h-[60vh] overflow-y-auto" : "w-0 p-0 ml-0"}`}
       >
         {open && (
           <div className="flex flex-col items-center gap-2">

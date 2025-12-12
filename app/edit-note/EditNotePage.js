@@ -180,7 +180,7 @@ useEffect(() => {
  
               {/* Sticker Toggle */}
               <div
-                className="fixed bottom-4 flex items-center gap-2 z-[9999]"
+                className="fixed bottom-4 flex items-center gap-2 z-[100]"
                 style={{ right: "3rem" }} // moves it 32px from the edge
               >
                 <StickersPanel onAddSticker={addSticker} />

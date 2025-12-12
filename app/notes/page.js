@@ -1,75 +1,53 @@
+// pages/notes/index.js (Full and Fixed Code)
 "use client";
 
 import { useRouter } from "next/navigation";
-import { createNote, getAllNotes } from "../../lib/localNotes";
+import { createNote, getAllNotes } from "../../lib/localNotes"; // Assuming this utility is available
 import { useEffect, useState } from "react";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/AuthContext"; // Assuming AuthContext is available
+// Import the new modular components
+import NotesHeader from "../../components/NotesHeader"; 
+import NotesGrid from "../../components/NotesGrid";
+
 
 export default function NotesPage() {
   const router = useRouter();
   const { user } = useAuth();
   const [notes, setNotes] = useState([]);
 
+  // 1. Fetch Notes (Client-Side)
   useEffect(() => {
+    // Only fetch if a user is logged in
     if (!user) return;
+    
+    // Load notes locally without blocking UI (simulates async data fetch)
     const timer = setTimeout(() => {
-      const all = getAllNotes(user.id);
+      // NOTE: Ensure getAllNotes is robust if user.id is null/undefined
+      const all = getAllNotes(user.id); 
       setNotes(all);
     }, 0);
+    
     return () => clearTimeout(timer);
   }, [user]);
 
+  // 2. Handle Add Note Logic: Creates a new note and redirects to the edit page
   const handleAddNote = () => {
     if (!user) return;
     const newNote = createNote(user.id);
     router.push(`/edit-note?id=${newNote.id}`);
   };
 
+  // 3. Render Modular Structure
+  // Responsive layout with a defined max-width
   return (
-    <div className="p-6 max-w-5xl mx-auto flex flex-col gap-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-2xl font-bold">Your Notes</h1>
-        <button
-          onClick={handleAddNote}
-          className="px-5 py-2 bg-[var(--color-accent-dark2)] text-white rounded-xl shadow hover:scale-105 transition-transform"
-        >
-          + Add Note
-        </button>
-      </div>
+    <div className="p-4 sm:p-6 max-w-6xl mx-auto flex flex-col gap-8 min-h-[80vh]">
+      
+      {/* HEADER SECTION (Modularized) */}
+      <NotesHeader onAddNote={handleAddNote} /> 
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {notes.length > 0 ? (
-          notes.map((note) => (
-
-
-            <div
-              key={note.id}
-              className="
-                p-5 rounded-2xl shadow-sm 
-                bg-[var(--color-accent-light2)]
-                border border-[var(--color-accent-light)]
-                hover:shadow-md hover:scale-[1.01]
-                transition-all cursor-pointer
-                flex flex-col
-              "
-              onClick={() => router.push(`/edit-note?id=${note.id}`)}
-            >
-              <h3 className="font-semibold text-lg mb-2 text-[var(--color-foreground)] truncate">
-                {note.title || "Untitled"}
-              </h3>
-
-              <p className="text-sm text-gray-600 line-clamp-4">
-                {note.content || "No content yet."}
-              </p>
-            </div>
-
-
-
-          ))
-        ) : (
-          <p className="text-gray-500 col-span-full text-center">No notes yet.</p>
-        )}
-      </div>
+      {/* NOTES GRID SECTION (Modularized) */}
+      <NotesGrid notes={notes} />
+      
     </div>
   );
 }
