@@ -2,7 +2,7 @@
 
 import { useAuth } from "../context/AuthContext";
 import { useRouter } from "next/navigation";
-import { Settings, Archive, HelpCircle, Info, LogOut } from "lucide-react";
+import { Settings, Archive, HelpCircle, Info, LogOut, RefreshCcw } from "lucide-react";
 
 export default function SidePanel({ isOpen, onClose }) {
   const router = useRouter();
@@ -10,25 +10,25 @@ export default function SidePanel({ isOpen, onClose }) {
 
   if (!isOpen) return null;
 
-  // Tool buttons: dusty/muted accent palette
   const buttonClasses = `flex items-center gap-3 p-3 bg-[var(--color-accent-dark2)] text-white rounded-xl shadow
     hover:bg-[var(--color-accent-dark)] hover:scale-105 hover:shadow-lg transition-all duration-200`;
 
-  // Logout button: soft muted red
   const logoutClasses = `flex items-center gap-3 p-3 bg-red-500/80 text-white rounded-xl shadow
-    hover:bg-red-500/90 hover:scale-105 hover:shadow-lg transition-all duration-200 mt-4`;
+    hover:bg-red-500/90 hover:scale-105 hover:shadow-lg transition-all duration-200`;
+
+  const resetClasses = `flex items-center gap-3 p-3 bg-orange-500/80 text-white rounded-xl shadow
+    hover:bg-orange-500/90 hover:scale-105 hover:shadow-lg transition-all duration-200`;
 
   return (
     <div className="fixed inset-0 z-[1000] flex justify-end">
-      {/* Frozen glass overlay */}
       <div
-        className="absolute inset-0 bg-[rgba(255,255,255,0.08)] backdrop-blur-[1px] transition-opacity duration-300"
+        className="absolute inset-0 bg-[rgba(255,255,255,0.08)] backdrop-blur-[1px]"
         onClick={onClose}
       />
 
-      {/* Panel */}
       <div
-        className="relative bg-gradient-to-b from-[var(--color-accent-light2)] to-[var(--color-accent-light)] w-72 h-full p-6 shadow-2xl flex flex-col space-y-4 transform transition-transform duration-300"
+        className="relative bg-gradient-to-b from-[var(--color-accent-light2)] to-[var(--color-accent-light)]
+        w-72 h-full p-6 shadow-2xl flex flex-col space-y-4"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Profile Card */}
@@ -60,7 +60,7 @@ export default function SidePanel({ isOpen, onClose }) {
           </button>
         </div>
 
-        {/* Logout button only shows if logged in */}
+        {/* Logout (if user exists) */}
         {user && (
           <button
             className={logoutClasses}
@@ -72,6 +72,11 @@ export default function SidePanel({ isOpen, onClose }) {
             <LogOut size={20} /> Log Out
           </button>
         )}
+
+        {/* Always available fallback */}
+        <button className={resetClasses} onClick={() => router.push("/reset-app")}>
+          <RefreshCcw size={20} /> Reset App Storage
+        </button>
       </div>
     </div>
   );
