@@ -216,10 +216,11 @@ useEffect(() => {
 
                   
                   {/* HEADER - Forced high z-index and disabled global transition for responsiveness */}
-                  <div 
-                    className="flex flex-wrap justify-between items-center w-full gap-2 mt-0 mb-1 relative z-[999] touch-auto"
-                    style={{ transition: 'none' }} 
+                  <div
+                    className="sticky top-0 z-[2000] bg-white flex flex-wrap justify-between items-center gap-2 p-2"
+                    style={{ transition: "none" }}
                   >
+
                     {/* Back Button */}
                     <button
                       type="button"
