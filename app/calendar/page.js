@@ -1,234 +1,221 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
-import { useNotification } from "../../context/NotificationContext"; 
+import { useNotification } from "../../context/NotificationContext";
+import { Plus, Clock, Trash2, Calendar as CalendarIcon } from "lucide-react";
 
 export default function CalendarPage() {
-  const containerRef = useRef(null);
-  const { showNotification } = useNotification(); 
+  const { showNotification } = useNotification();
+  const [mounted, setMounted] = useState(false);
+  const [currentDate, setCurrentDate] = useState(new Date());
+  
+  // Controls which month/year the calendar grid is displaying
+  const [activeStartDate, setActiveStartDate] = useState(new Date());
+  
+  const [showModal, setShowModal] = useState(false);
+  const [newEvent, setNewEvent] = useState({ title: "", date: "", time: "" });
 
-  // FIXED: Lazy Initial State (No more cascading render error)
+  // Load events from LocalStorage
   const [events, setEvents] = useState(() => {
     if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("calendar_events");
+      const saved = localStorage.getItem("planner_events");
       try {
         return saved ? JSON.parse(saved) : [];
       } catch (e) {
-        console.error("Failed to parse calendar events", e);
         return [];
       }
     }
     return [];
   });
 
-  const [showModal, setShowModal] = useState(false);
-  const [newEvent, setNewEvent] = useState({ title: "", date: "", time: "" });
-
-  // Browser Permission Request
   useEffect(() => {
-    if ("Notification" in window && Notification.permission === "default") {
-      Notification.requestPermission();
-    }
+    setMounted(true);
   }, []);
 
-  // Sync state to LocalStorage
   useEffect(() => {
-    localStorage.setItem("calendar_events", JSON.stringify(events));
+    localStorage.setItem("planner_events", JSON.stringify(events));
   }, [events]);
 
-  // ... rest of your logic (checker, addEvent, etc.)
-  
+  const selectedDateStr = currentDate.toISOString().split("T")[0];
+  const dayEvents = useMemo(() => {
+    return events
+      .filter((e) => e.date === selectedDateStr)
+      .sort((a, b) => a.time.localeCompare(b.time));
+  }, [events, selectedDateStr]);
 
-  // --- UPDATED NOTIFICATION CHECKER ---
-  useEffect(() => {
-    const checkInterval = setInterval(() => {
-      const now = new Date();
-      const currentDate = now.toISOString().split('T')[0];
-      const currentTime = now.toTimeString().slice(0, 5);
+  // Jump to today logic
+  const handleGoToToday = () => {
+    const today = new Date();
+    setCurrentDate(today);       
+    setActiveStartDate(today);   
+    
+    // We trigger the notification here
+    showNotification("Back to Today", "info");
+  };
 
-      events.forEach((event, index) => {
-        if (event.date === currentDate && event.time === currentTime && !event.notified) {
-          
-          // 1. Internal UI Notification (Your Toast)
-          showNotification(`It's time for: ${event.title}`, "success");
-
-          // 2. Browser/System Notification
-          if ("Notification" in window && Notification.permission === "granted") {
-            new Notification("Event Reminder", {
-              body: `It's time for: ${event.title}`,
-              icon: "/logo.png" // Replace with your actual logo path
-            });
-          }
-
-          const updatedEvents = [...events];
-          updatedEvents[index].notified = true;
-          setEvents(updatedEvents);
-        }
-      });
-    }, 30000); 
-
-    return () => clearInterval(checkInterval);
-  }, [events, showNotification]);
-
-  // --- REMAINDER OF YOUR CODE ---
   const handleAddEvent = () => {
     if (!newEvent.title || !newEvent.date || !newEvent.time) {
-        showNotification("Please fill all fields!", "warning");
-        return;
+      showNotification("Please fill all fields!", "warning");
+      return;
     }
     setEvents([...events, { ...newEvent, id: Date.now(), notified: false }]);
     setShowModal(false);
-    setNewEvent({ title: "", date: "", time: "" });
-    showNotification(`${newEvent.title} has been scheduled.`, "success");
+    setNewEvent({ title: "", date: selectedDateStr, time: "" });
+    showNotification("Event added!", "success");
   };
 
-  const generateMonths = (centerDate, count = 7) => {
-    const arr = [];
-    const startOffset = -Math.floor(count / 2);
-    for (let i = startOffset; i < startOffset + count; i++) {
-      arr.push(new Date(centerDate.getFullYear(), centerDate.getMonth() + i, 1));
-    }
-    return arr;
+  const deleteEvent = (id) => {
+    setEvents(events.filter((e) => e.id !== id));
+    showNotification("Event deleted", "info");
   };
 
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [months, setMonths] = useState(() => generateMonths(new Date(), 7));
-
-  const formatMonth = (date) =>
-    date.toLocaleString("en-US", { month: "long", year: "numeric" });
-
-  const goToToday = () => {
-    const today = new Date();
-    setCurrentDate(today);
-    const container = containerRef.current;
-    if (!container) return;
-    const index = months.findIndex(
-      (m) => m.getFullYear() === today.getFullYear() && m.getMonth() === today.getMonth()
-    );
-    if (index >= 0) {
-      const monthEl = container.children[index];
-      if (!monthEl) return;
-      const topOffset = 120;
-      container.scrollTo({ top: monthEl.offsetTop - topOffset, behavior: "smooth" });
+  const tileContent = ({ date, view }) => {
+    if (view === "month") {
+      const dStr = date.toISOString().split("T")[0];
+      const hasEvent = events.some((e) => e.date === dStr);
+      return hasEvent ? (
+        <div className="absolute bottom-3 left-0 right-0 flex justify-center pointer-events-none">
+          <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-green)] opacity-60 animate-pulse" />
+        </div>
+      ) : null;
     }
   };
 
-  const handleScroll = () => {
-    const container = containerRef.current;
-    if (!container) return;
-    const { scrollTop, scrollHeight, clientHeight } = container;
-    if (scrollTop < 100) {
-      const firstMonth = months[0];
-      const prevMonth = new Date(firstMonth.getFullYear(), firstMonth.getMonth() - 1, 1);
-      setMonths((prev) => [prevMonth, ...prev]);
-      container.scrollTop = scrollTop + 300;
-    }
-    if (scrollTop + clientHeight > scrollHeight - 100) {
-      const lastMonth = months[months.length - 1];
-      const nextMonth = new Date(lastMonth.getFullYear(), lastMonth.getMonth() + 1, 1);
-      setMonths((prev) => [...prev, nextMonth]);
-    }
-  };
-
-  useEffect(() => { 
-    requestAnimationFrame(goToToday); 
-  }, []);
+  if (!mounted) return <div className="min-h-screen bg-white" />;
 
   return (
-    <div className="flex flex-col min-h-screen w-full px-4 sm:px-8 items-center relative pb-20">
+    <div className="relative w-full min-h-screen px-4 py-8 flex flex-col items-center gap-6 pb-40 bg-[#ffffff]">
+      
+      {/* HEADER: Z-index is 50. Anything overlapping must be 51+ */}
       <header className="page-title-label">Calendar</header>
 
-      <div
-        ref={containerRef}
-        onScroll={handleScroll}
-        className="w-full flex flex-col overflow-y-auto no-scrollbar"
-        style={{ height: 'calc(100vh - 100px)', marginTop: '80px' }}
-      >
-        {months.map((monthDate, idx) => (
-          <div key={idx} className="w-full calendar-wrapper mb-8">
-            <div className="calendar-month-title flex flex-col items-center mb-4">
-              <span className="text-xl font-bold text-[var(--color-dark-green)]">{formatMonth(monthDate)}</span>
-              <div className="w-16 h-1 bg-[var(--color-accent)] rounded-full mt-1"></div>
-            </div>
-            <Calendar
-              value={currentDate}
-              onClickDay={(date) => {
-                setCurrentDate(date);
-                setNewEvent({...newEvent, date: date.toISOString().split('T')[0]});
-              }}
-              activeStartDate={monthDate}
-              showNeighboringMonth={false}
-              showNavigation={false}
-              className="responsive-calendar mx-auto"
-            />
+      {/* Main Content Layout */}
+      <div className="w-full max-w-6xl mt-24 grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-8 items-start animate-in fade-in slide-in-from-top-4 duration-700">
+        
+        {/* Left Card: Calendar */}
+        <div className="w-full bg-[#FEFDFB] rounded-[32px] p-6 shadow-sm border border-[#F5EBE0]">
+          <div className="flex justify-between items-center mb-6 px-1">
+            <h2 className="text-xs font-bold text-[#93737C] flex items-center gap-2 uppercase tracking-[0.2em]">
+              <CalendarIcon size={14} className="text-[var(--color-green)]" />
+              Schedule
+            </h2>
+            <button 
+              onClick={handleGoToToday}
+              className="text-[10px] font-black uppercase tracking-widest text-[#B89AA4] hover:text-[var(--color-green)] transition-all active:scale-95 px-3 py-1.5 hover:bg-[var(--color-accent-light)] rounded-full border border-transparent hover:border-[#F5EBE0]"
+            >
+              Today
+            </button>
           </div>
-        ))}
+
+          <Calendar
+            onChange={setCurrentDate}
+            value={currentDate}
+            activeStartDate={activeStartDate}
+            onActiveStartDateChange={({ activeStartDate }) => setActiveStartDate(activeStartDate)}
+            tileContent={tileContent}
+            className="modern-calendar-main"
+            next2Label={null}
+            prev2Label={null}
+          />
+        </div>
+
+        {/* Right Card: Agenda */}
+        <div className="flex-1 w-full">
+          <div className="bg-[#FEFDFB] rounded-[32px] p-6 sm:p-10 border border-[#F5EBE0] shadow-sm min-h-[520px] flex flex-col">
+            <div className="flex justify-between items-start mb-10">
+              <div>
+                <p className="text-[var(--color-accent-dark)] font-extrabold uppercase tracking-widest text-[10px] mb-2">Selected Day</p>
+                <h1 className="text-2xl sm:text-3xl font-black text-[var(--color-dark-green)] tracking-tight">
+                  {currentDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                </h1>
+              </div>
+              <button
+                onClick={() => {
+                  setNewEvent(p => ({ ...p, date: selectedDateStr }));
+                  setShowModal(true);
+                }}
+                className="w-14 h-14 bg-[var(--color-accent2)] text-[var(--color-dark-green)] rounded-[20px] flex items-center justify-center hover:rotate-90 transition-all duration-500 shadow-md active:scale-95 group"
+              >
+                <Plus size={28} className="group-hover:scale-110 transition-transform" />
+              </button>
+            </div>
+
+            <div className="flex-1 space-y-4">
+              {dayEvents.length > 0 ? (
+                dayEvents.map((event) => (
+                  <div key={event.id} className="group flex items-center gap-5 p-5 bg-white rounded-[24px] border border-[#F5EBE0]/80 hover:shadow-lg hover:border-[var(--color-green)]/30 transition-all animate-in slide-in-from-bottom-4 duration-300">
+                    <div className="w-12 h-12 bg-[var(--color-accent-light)] rounded-2xl flex items-center justify-center text-[var(--color-accent-dark2)]">
+                      <Clock size={22} />
+                    </div>
+                    <div className="flex-1">
+                      <span className="text-[10px] font-bold text-[#B89AA4] tracking-wider uppercase">{event.time}</span>
+                      <h4 className="text-[var(--color-foreground)] text-lg font-bold leading-tight">{event.title}</h4>
+                    </div>
+                    <button 
+                      onClick={() => deleteEvent(event.id)}
+                      className="opacity-0 group-hover:opacity-100 p-3 text-gray-300 hover:text-red-400 transition-all active:scale-90"
+                    >
+                      <Trash2 size={20} />
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center text-center py-20">
+                  <div className="w-20 h-20 bg-[var(--color-accent-light)] rounded-full flex items-center justify-center mb-4 opacity-40">
+                    <CalendarIcon size={32} className="text-[var(--color-accent-dark)]" />
+                  </div>
+                  <p className="font-bold text-[#4B3C34] opacity-30 italic">No plans yet for this date.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
 
+      {/* Modal: Increased Z-index to 110 to be above everything */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[100] px-6">
-          <div className="bg-white p-6 rounded-3xl w-full max-w-sm shadow-2xl border-2 border-[var(--color-card)] animate-in fade-in zoom-in duration-200">
-            <h2 className="text-xl font-bold mb-4 text-[var(--color-dark-green)]">New Event</h2>
-            <input 
-              type="text" 
-              placeholder="Event Title" 
-              className="w-full p-3 mb-3 border-2 border-gray-100 rounded-xl focus:border-[var(--color-accent)] outline-none transition-all"
-              value={newEvent.title}
-              onChange={(e) => setNewEvent({...newEvent, title: e.target.value})}
-            />
-            <div className="flex gap-2">
-                <input 
-                  type="date" 
-                  className="w-full p-3 mb-3 border-2 border-gray-100 rounded-xl text-sm outline-none"
-                  value={newEvent.date}
-                  onChange={(e) => setNewEvent({...newEvent, date: e.target.value})}
-                />
-                <input 
-                  type="time" 
-                  className="w-full p-3 mb-3 border-2 border-gray-100 rounded-xl text-sm outline-none"
-                  value={newEvent.time}
-                  onChange={(e) => setNewEvent({...newEvent, time: e.target.value})}
-                />
+        <div className="fixed inset-0 bg-[#4B3C34]/30 backdrop-blur-md z-[110] flex items-center justify-center p-6">
+          <div className="bg-white w-full max-w-sm rounded-[40px] p-10 shadow-2xl border-[8px] border-[var(--color-accent-light)] animate-in zoom-in duration-300">
+            <div className="mb-8">
+               <h3 className="text-2xl font-black text-[var(--color-foreground)]">Add Plan</h3>
+               <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">New Event Details</p>
             </div>
-            <div className="flex gap-3 mt-2">
-                <button 
-                  onClick={() => setShowModal(false)} 
-                  className="flex-1 p-3 rounded-xl bg-gray-100 font-semibold active:scale-95 transition-transform"
-                >
-                  Cancel
-                </button>
-                <button 
-                  onClick={handleAddEvent} 
-                  className="flex-1 p-3 rounded-xl bg-[var(--color-accent)] text-white font-semibold shadow-lg active:scale-95 transition-transform"
-                >
-                  Save
-                </button>
+            
+            <div className="space-y-5">
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-[#B89AA4] uppercase ml-2">Event Title</label>
+                <input 
+                  autoFocus
+                  type="text" 
+                  placeholder="e.g. Study Session"
+                  className="w-full p-4 bg-[#FEFDFB] border-2 border-[#F5EBE0] rounded-2xl outline-none focus:border-[var(--color-green)] transition-all font-bold text-[#4B3C34]"
+                  value={newEvent.title}
+                  onChange={e => setNewEvent({...newEvent, title: e.target.value})}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-[#B89AA4] uppercase ml-2">Date</label>
+                  <input type="date" className="w-full p-4 bg-[#FEFDFB] border-2 border-[#F5EBE0] rounded-2xl text-xs font-bold" value={newEvent.date} onChange={e => setNewEvent({...newEvent, date: e.target.value})} />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-[#B89AA4] uppercase ml-2">Time</label>
+                  <input type="time" className="w-full p-4 bg-[#FEFDFB] border-2 border-[#F5EBE0] rounded-2xl text-xs font-bold" value={newEvent.time} onChange={e => setNewEvent({...newEvent, time: e.target.value})} />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-4 mt-10">
+              <button onClick={() => setShowModal(false)} className="flex-1 py-4 font-bold text-gray-400 hover:text-gray-600 transition-colors">Cancel</button>
+              <button onClick={handleAddEvent} className="flex-[2] py-4 bg-[var(--color-green)] text-white rounded-2xl font-black shadow-lg shadow-green-100 hover:brightness-105 active:scale-95 transition-all">Save Event</button>
             </div>
           </div>
         </div>
       )}
 
-      <div className="fixed bottom-24 right-6 flex flex-col gap-3 z-50">
-        <button
-          onClick={() => setShowModal(true)}
-          className="px-5 py-3 rounded-full bg-[var(--color-accent)] text-white font-bold shadow-lg hover:scale-105 active:scale-95 transition-all border-2 border-[var(--color-accent)]"
-        >
-          Add Event
-        </button>
-
-        <button
-          onClick={goToToday}
-          className="px-5 py-3 rounded-full bg-white text-[var(--color-dark-green)] font-bold shadow-lg hover:scale-105 active:scale-95 transition-all border-2 border-[var(--color-card)]"
-        >
-          Today
-        </button>
-      </div>
-
-
-
-
+      
     </div>
   );
 }

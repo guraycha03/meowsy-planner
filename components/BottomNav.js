@@ -15,8 +15,8 @@ export default function BottomNav() {
   ];
 
   return (
-    <nav className="fixed bottom-0 w-full bg-[var(--color-accent-light)] py-4 flex justify-around rounded-t-xl z-50 shadow-[0_-2px_4px_rgba(0,0,0,0.1)] lg:hidden">
-      {navItems.map(({ href, label, icon: Icon }) => {
+      <nav className="fixed bottom-0 w-full bg-[var(--color-accent-light)] py-4 flex justify-around rounded-t-xl z-40 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] lg:hidden">
+        {navItems.map(({ href, label, icon: Icon }) => {
         const isActive = pathname === href;
 
         return (

@@ -1,45 +1,46 @@
 // components/NoticePopup.js
 "use client";
 
-import { CheckCircle, AlertTriangle, XCircle, X } from "lucide-react";
-import { useState, useEffect } from "react";
+import { CheckCircle, AlertTriangle, XCircle, X, Info } from "lucide-react";
 
-// Reusable Notification Style Component
 export default function NoticePopup({ id, type = "success", message, onClose }) {
-  // We use Tailwind's `pointer-events-auto` to make the individual popup clickable, 
-  // while the container in the context remains `pointer-events-none` until a hover/click.
   
   const typeStyles = {
-    success: "bg-green-100 border-green-400 text-green-700",
-    warning: "bg-yellow-100 border-yellow-400 text-yellow-700",
-    error: "bg-red-100 border-red-400 text-red-700",
+    success: "bg-white border-green-200 text-green-800 shadow-green-100",
+    warning: "bg-white border-yellow-200 text-yellow-800 shadow-yellow-100",
+    error:   "bg-white border-red-200 text-red-800 shadow-red-100",
+    info:    "bg-white border-blue-200 text-blue-800 shadow-blue-100",
   };
 
   const icons = {
-    success: <CheckCircle className="w-5 h-5 flex-shrink-0" />,
-    warning: <AlertTriangle className="w-5 h-5 flex-shrink-0" />,
-    error: <XCircle className="w-5 h-5 flex-shrink-0" />,
+    success: <CheckCircle className="w-5 h-5 text-green-500" />,
+    warning: <AlertTriangle className="w-5 h-5 text-yellow-500" />,
+    error:   <XCircle className="w-5 h-5 text-red-500" />,
+    info:    <Info className="w-5 h-5 text-blue-500" />,
   };
 
   return (
     <div
       id={id}
-      className={`relative max-w-sm w-full p-4 rounded-xl border flex items-center gap-3 font-semibold shadow-lg transition-all duration-300 transform 
-      // Styles for placement and interaction
-      pointer-events-auto opacity-100 translate-y-0
-      ${typeStyles[type]}`}
+      className={`
+        notification-item
+        relative max-w-sm w-full p-4 rounded-2xl border-2 flex items-center gap-3 
+        font-bold shadow-xl transition-all duration-500 transform 
+        pointer-events-auto animate-in slide-in-from-top-full fade-in
+        ${typeStyles[type]}
+      `}
       role="alert"
     >
-      {icons[type]} 
-      <span className="flex-1 text-sm">{message}</span>
+      <div className="flex-shrink-0">
+        {icons[type]}
+      </div> 
+      <span className="flex-1 text-sm tracking-tight">{message}</span>
       
-      {/* Explicit Close Button (Interactive) */}
       <button
         onClick={onClose}
-        aria-label="Close notification"
-        className={`ml-4 p-1 rounded-full hover:bg-opacity-70 transition-colors flex-shrink-0 opacity-80 ${type === 'success' ? 'hover:bg-green-200' : type === 'warning' ? 'hover:bg-yellow-200' : 'hover:bg-red-200'}`}
+        className="ml-2 p-1.5 rounded-xl hover:bg-gray-100 transition-colors flex-shrink-0"
       >
-        <X className="w-4 h-4" />
+        <X className="w-4 h-4 text-gray-400" />
       </button>
     </div>
   );

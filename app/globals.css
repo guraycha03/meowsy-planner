@@ -55,6 +55,8 @@ body {
   transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, transform 0.2s ease-in-out;
 }
 
+
+
 /* Hide scrollbars globally */
 *::-webkit-scrollbar {
   display: none;
@@ -82,6 +84,147 @@ button, input, textarea, a {
 
 
 
+
+
+
+
+
+
+
+
+
+/* Custom Modern Calendar Styling - Clean & Spaced (Standard CSS) */
+.modern-calendar-main {
+  width: 100% !important;
+  border: none !important;
+  font-family: var(--font-sans);
+  background: transparent !important;
+}
+
+.modern-calendar-main .react-calendar__navigation {
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.modern-calendar-main .react-calendar__navigation button {
+  min-width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  font-weight: 700;
+  color: var(--color-foreground);
+  transition: all 0.2s ease-in-out;
+  background: transparent;
+}
+
+.modern-calendar-main .react-calendar__navigation button:hover {
+  background-color: var(--color-accent-light);
+}
+
+.modern-calendar-main .react-calendar__navigation__label {
+  font-size: 1.125rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.025em;
+}
+
+.modern-calendar-main .react-calendar__month-view__weekdays {
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-accent-dark);
+  margin-bottom: 0.5rem;
+  opacity: 0.8;
+}
+
+.modern-calendar-main .react-calendar__month-view__weekdays__weekday abbr {
+  text-decoration: none !important;
+  border: none !important;
+}
+
+/* THE FIX: Spaced Tile Styling */
+.modern-calendar-main .react-calendar__tile {
+  aspect-ratio: 1 / 1 !important; 
+  padding: 6px !important; /* This creates the "Outer Space" between selections */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-foreground);
+  background: transparent;
+  position: relative;
+  /* background-clip ensures the color stays within the padding we just added */
+  background-clip: content-box !important; 
+  border-radius: 20px !important; 
+}
+
+/* Today's Date Highlight */
+.modern-calendar-main .react-calendar__tile--now {
+  background-color: var(--color-accent-light) !important;
+  color: var(--color-accent-dark2) !important;
+  background-clip: content-box !important;
+}
+
+/* Selected/Active Date - Sage Green Squircle */
+.modern-calendar-main .react-calendar__tile--active {
+  background-color: var(--color-green) !important; 
+  color: white !important;
+  box-shadow: 0 8px 20px -6px rgba(143, 177, 100, 0.5);
+  transform: scale(1.08);
+  z-index: 10;
+  background-clip: content-box !important;
+}
+
+.modern-calendar-main .react-calendar__tile:hover:not(.react-calendar__tile--active) {
+  background-color: var(--color-accent-light2);
+  transform: translateY(-2px);
+  background-clip: content-box !important;
+}
+
+/* Fade out dates from other months */
+.modern-calendar-main .react-calendar__month-view__days__day--neighboringMonth {
+  opacity: 0.15;
+}
+
+
+
+
+
+
+
+
+/* ==========================
+   Notification Fix
+========================== */
+/* ==========================
+   Notification Container Fix
+========================== */
+.notification-container {
+  position: fixed !important;
+  top: 24px !important; /* Positions it clearly at the top */
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  z-index: 10000 !important; /* Higher than BottomNav (40) and Header (50) */
+  pointer-events: none;
+  width: 100%;
+  max-width: 380px; /* Perfect for mobile screens */
+}
+
+.notification-item {
+  pointer-events: auto;
+  /* Use a professional glassmorphism or clean shadow */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+
+
 /* ==========================
    Page Title Label
 ========================== */
@@ -104,287 +247,6 @@ button, input, textarea, a {
   margin-top: 0;
   margin-bottom: 0;
 }
-
-
-/* ==========================
-   Calendar Page Container
-========================== */
-.calendar-page-container {
-  position: relative;
-  top: 40px;
-  z-index: 5;
-  background: transparent;
-  padding-top: 0;
-}
-
-/* ==========================
-   Calendar Wrapper
-========================== */
-.calendar-wrapper {
-  background-color: transparent;
-  border-radius: 0;
-  padding: 0;
-  margin-bottom: 2rem;
-}
-
-.calendar-wrapper:last-child {
-  margin-bottom: 0;
-}
-
-/* ==========================
-   Floating Buttons
-========================== */
-.floating-button-softer {
-  font-weight: 600;
-  border-radius: 50px;
-  padding: 8px 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  transition: all 0.3s ease;
-}
-
-.bg-soft-accent {
-  background-color: var(--color-accent) !important;
-  color: var(--color-foreground);
-}
-.bg-soft-accent:hover {
-  background-color: var(--color-accent-dark) !important;
-}
-
-.bg-soft-green {
-  background-color: var(--color-green) !important;
-  color: var(--color-background);
-}
-.bg-soft-green:hover {
-  background-color: var(--color-dark-green) !important;
-}
-
-/* ==========================
-   Calendar Month Title
-========================== */
-.calendar-month-title {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: var(--color-foreground);
-  text-align: center;
-  margin: 0;
-  padding: 14px 0 32px 0;
-  background-color: var(--color-accent-light2);
-  border-top-left-radius: 20px;
-  border-top-right-radius: 20px;
-  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.05);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.calendar-month-title-divider {
-  width: 70%;
-  height: 4px;
-  background-color: var(--color-accent-light);
-  opacity: 0.9;
-  margin-top: 16px;
-  border-radius: 3px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-/* ==========================
-   React Calendar Base Styles
-========================== */
-.react-calendar {
-  width: 100%;
-  font-family: var(--font-sans), cursive;
-  background-color: var(--color-calendar-bg) !important;
-  border-radius: 0 0 20px 20px;
-  padding: 6;
-  box-sizing: border-box;
-  border: none;
-}
-
-.react-calendar__month-view__days {
-  padding: 4 0 0 0;
-}
-
-
-
-
-/* Each weekday individually */
-/* Each weekday with thick white outline */
-.react-calendar__month-view__weekdays abbr {
-  font-family: 'Quicksand', sans-serif; 
-  font-weight: 600;
-  font-size: 1.2rem; 
-  color: var(--color-foreground);
-  text-decoration: none; 
-  text-transform: capitalize;
-  display: inline-block;
-  min-width: 40px;
-  text-align: center;
-  transition: all 0.2s ease;
-
-  /* Thick white outline using multiple shadows for a strong effect */
-  text-shadow:
-    2px 2px 0 #ffffff,
-   -2px 2px 0 #ffffff,
-    2px -2px 0 #ffffff,
-   -2px -2px 0 #ffffff,
-    2px 0 0 #ffffff,
-   -2px 0 0 #ffffff,
-    0 2px 0 #ffffff,
-    0 -2px 0 #ffffff,
-    1px 2px 0 #ffffff,
-   -1px 2px 0 #ffffff,
-    1px -2px 0 #ffffff,
-   -1px -2px 0 #ffffff;
-}
-
-/* Responsive font sizes */
-@media (min-width: 480px) {
-  .react-calendar__month-view__weekdays abbr { font-size: 1.4rem; }
-}
-@media (min-width: 640px) {
-  .react-calendar__month-view__weekdays abbr { font-size: 1.6rem; }
-}
-@media (min-width: 768px) {
-  .react-calendar__month-view__weekdays abbr { font-size: 1.8rem; }
-}
-@media (min-width: 1024px) {
-  .react-calendar__month-view__weekdays abbr { font-size: 2rem; }
-}
-
-
-
-
-
-/* ==========================
-   Calendar Tiles - Weekdays
-========================== */
-.react-calendar__tile abbr {
-  display: inline-flex !important;
-  justify-content: center;
-  align-items: center;
-  aspect-ratio: 1 / 1;
-  width: 100%;
-  max-width: 60px;
-  min-width: 40px;
-  height: auto !important;
-  border-radius: 20%;
-  font-weight: bold;
-  font-family: var(--font-sans), cursive;
-  font-size: 1.5rem;
-  color: var(--color-foreground);
-  background-color: var(--color-background);
-  transition: all 0.3s ease;
-}
-
-.react-calendar__tile abbr:hover {
-  background-color: var(--color-accent-light);
-  color: var(--color-foreground);
-  cursor: pointer;
-  border-radius: 30%;
-}
-
-/* Weekend Tiles */
-.react-calendar__month-view__days__day--weekend abbr {
-  background-color: var(--color-accent-light2) !important;
-  color: var(--color-foreground);
-  border-radius: 20%;
-}
-
-.react-calendar__month-view__days__day--weekend abbr:hover {
-  background-color: var(--color-accent-light) !important;
-}
-
-/* ==========================
-   Active / Current Date Tiles
-========================== */
-.react-calendar .react-calendar__tile--active {
-  background-color: transparent !important;
-  color: var(--color-foreground) !important;
-}
-
-.react-calendar .react-calendar__tile--active abbr {
-  background-color: var(--color-accent-light) !important;
-  color: var(--color-foreground) !important;
-  border-radius: 30% !important;
-  border: 2px solid var(--color-muted) !important;
-}
-
-.react-calendar .react-calendar__tile--now {
-  background-color: transparent !important;
-  color: var(--color-foreground) !important;
-}
-
-.react-calendar .react-calendar__tile--now abbr {
-  background-color: var(--color-accent) !important;
-  color: var(--color-background) !important;
-  border-radius: 30% !important;
-  border: 2px solid var(--color-muted) !important;
-}
-
-/* ==========================
-   Responsive Adjustments
-========================== */
-@media (min-width: 640px) {
-  .react-calendar__tile abbr {
-    max-width: 70px;
-    font-size: 1.5rem;
-  }
-}
-
-@media (min-width: 768px) {
-  .react-calendar__tile abbr {
-    max-width: 100px;
-    font-size: 2.2rem;
-  }
-}
-
-@media (min-width: 1024px) {
-  .react-calendar__tile abbr {
-    max-width: 120px;
-    font-size: 2.5rem;
-  }
-  .calendar-month-title {
-    font-size: 3rem;
-  }
-  .react-calendar {
-    padding: 32px;
-  }
-  .react-calendar__tile {
-    border-radius: 4px !important;
-  }
-}
-
-/* ==========================
-   Full Width / Responsive Tiles
-========================== */
-.responsive-calendar,
-.responsive-calendar .react-calendar__month-view__week {
-  width: 100% !important;
-}
-
-.responsive-calendar .react-calendar__tile {
-  width: 100% !important;
-  height: auto !important;
-}
-
-.responsive-calendar .react-calendar__tile abbr {
-  width: 100% !important;
-  height: 100% !important;
-}
-
-/* ==========================
-   Remove Inner Borders
-========================== */
-.react-calendar,
-.react-calendar *,
-.react-calendar *::before,
-.react-calendar *::after {
-  border: none !important;
-  outline: none !important;
-}
-
-
-
 
 
 
