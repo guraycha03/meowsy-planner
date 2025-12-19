@@ -3,11 +3,23 @@
 import { useState, useEffect } from "react";
 
 const ILLUSTRATION_IMAGES = [
-  "/images/home-illus-1.png",
-  "/images/home-illus-2.png",
-  "/images/home-illus-3.png",
-  "/images/home-illus-4.png",
-  "/images/home-illus-5.png",
+  "/images/home-illus/apple.png",
+  "/images/home-illus/communication.png",
+  "/images/home-illus/donut.png",
+  "/images/home-illus/education.png",
+  "/images/home-illus/grade.png",
+  "/images/home-illus/idea.png",
+  "/images/home-illus/in-love.png",
+  "/images/home-illus/kiss.png",
+  "/images/home-illus/love.png",
+  "/images/home-illus/love-1.png",
+  "/images/home-illus/love-2.png",
+  "/images/home-illus/sleep.png",
+  "/images/home-illus/reading.png",
+  "/images/home-illus/sleep.png",
+  "/images/home-illus/smile.png",
+  "/images/home-illus/winter.png",
+  
 ];
 
 export default function WelcomeCard({ user, welcomeMessage }) {
