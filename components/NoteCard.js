@@ -275,16 +275,30 @@ export default function NoteCard({ styleId, title, children, href }) {
   }
   
   // 7. Clip Board Note
+  // 7. Clip Board Note - IMPROVED FOR CONTRAST
   if (style.variation === "clipboard-card") {
     return (
       <a 
         href={href} 
-        className={`${baseClasses} bg-[var(--card-bg-color)] p-4 shadow-xl`} 
-        style={customStyles}
+        className={`${baseClasses} p-4 shadow-xl`} 
+        style={{
+          ...customStyles,
+          // Use the defined border color as the background of the "board"
+          backgroundColor: style.borderColor, 
+          borderRadius: '12px'
+        }}
       >
-        <div className="bg-white rounded-md shadow-md overflow-hidden flex flex-col">
-          <CommonCardHeader noteStyle={style} className="pt-3 pb-2">{title}</CommonCardHeader>
-          <CommonCardContent className="pb-4">{children}</CommonCardContent>
+        {/* Metal Clip Detail */}
+        <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-12 h-3 bg-gray-400 rounded-t-md opacity-80 z-20"></div>
+        
+        {/* The "Paper" - kept white for high contrast and readability */}
+        <div className="bg-white rounded-sm shadow-inner overflow-hidden flex flex-col relative z-10 min-h-full border border-black/5">
+          <CommonCardHeader noteStyle={style} className="pt-3 pb-2 text-center border-b border-gray-100">
+            {title}
+          </CommonCardHeader>
+          <CommonCardContent className="pb-4">
+            {children}
+          </CommonCardContent>
         </div>
       </a>
     );
