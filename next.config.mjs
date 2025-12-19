@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactCompiler: true, // keep if needed
+  reactCompiler: true, 
 };
 
 export default nextConfig;
