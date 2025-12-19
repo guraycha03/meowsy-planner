@@ -213,10 +213,11 @@ export default function CalendarPage() {
       <div className="fixed bottom-24 right-6 flex flex-col gap-3 z-50">
         <button
           onClick={() => setShowModal(true)}
-          className="w-14 h-14 rounded-full bg-[var(--color-accent)] text-white flex items-center justify-center shadow-xl hover:scale-110 active:scale-90 transition-all text-2xl font-bold"
+          className="px-5 py-3 rounded-full bg-[var(--color-accent)] text-white font-bold shadow-lg hover:scale-105 active:scale-95 transition-all border-2 border-[var(--color-accent)]"
         >
-          +
+          Add Event
         </button>
+
         <button
           onClick={goToToday}
           className="px-5 py-3 rounded-full bg-white text-[var(--color-dark-green)] font-bold shadow-lg hover:scale-105 active:scale-95 transition-all border-2 border-[var(--color-card)]"
@@ -224,6 +225,10 @@ export default function CalendarPage() {
           Today
         </button>
       </div>
+
+
+
+
     </div>
   );
 }
