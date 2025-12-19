@@ -215,24 +215,25 @@ useEffect(() => {
 
 
                   
-                  {/* Header and Title unchanged... */}
-                  {/* HEADER */}
-                  {/* HEADER - Updated with z-index to fix mobile click issues */}
-                  <div className="flex flex-wrap justify-between items-center w-full gap-2 mt-0 mb-1 relative z-[110]">
-                    
-
-                  {/* Back Button */}
-                  <button
-                    type="button" // Explicitly set type
-                    onClick={(e) => {
-                      e.preventDefault();
-                      router.back();
-                    }}
-                    className={`${buttonBaseClasses} px-5 py-2 bg-[var(--color-accent-light)] hover:bg-[var(--color-accent)] text-[var(--color-foreground)] font-semibold relative z-[120]`}
+                  {/* HEADER - Forced high z-index and disabled global transition for responsiveness */}
+                  <div 
+                    className="flex flex-wrap justify-between items-center w-full gap-2 mt-0 mb-1 relative z-[999] touch-auto"
+                    style={{ transition: 'none' }} 
                   >
-                    <ArrowLeft className="h-5 w-5" />
-                    <span>Back</span>
-                  </button>
+                    {/* Back Button */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation(); // Prevents the click from bubbling to the note area
+                        router.back();
+                      }}
+                      className={`${buttonBaseClasses} px-5 py-2 bg-[var(--color-accent-light)] hover:bg-[var(--color-accent)] text-[var(--color-foreground)] font-semibold relative z-[1000]`}
+                      style={{ transition: 'none' }}
+                    >
+                      <ArrowLeft className="h-5 w-5" />
+                      <span>Back</span>
+                    </button>
 
                   {/* Right-Side Buttons */}
                   <div className="flex gap-2">
