@@ -85,5 +85,3 @@ As a university project focused on **Front-End Excellence**, the following princ
 ## 🌿 Final Notes
 Meowsy Planner is more than a tool; it is an experiment in **Artistic Frontend Engineering**. It prioritizes the "joy of use" as much as the utility of the task itself.
 
-**Created by:** [Your Name/University Student]
-**Primary Focus:** UI/UX Development & Creative Frontend
