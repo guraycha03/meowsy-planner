@@ -49,7 +49,7 @@ export default function StickersPanel({ onAddSticker }) {
         className="w-10 h-10 p-0 shadow-md rounded-full overflow-hidden bg-transparent"
       >
         <Image
-          src="/icons/sticker.png"
+          src="/images/meowsy-cat.png"
           alt="Toggle"
           width={40}
           height={40}
