@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 
 const ILLUSTRATION_IMAGES = [
   "/images/home-illus/apple.png",
-  "/images/home-illus/communication.png",
+  "/images/home-illus/communications.png",
   "/images/home-illus/donut.png",
   "/images/home-illus/education.png",
   "/images/home-illus/grade.png",
