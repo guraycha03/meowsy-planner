@@ -195,11 +195,14 @@ useEffect(() => {
               <div className="w-full px-2 py-2 relative bg-[#f7f5f2]">
  
                 {/* Sticker Toggle */}
+                {/* Sticker Toggle - Updated to let clicks pass through the empty space */}
                 <div
-                  className="fixed bottom-4 flex items-center gap-2 z-[100]"
-                  style={{ right: "3rem" }} // moves it 32px from the edge
+                  className="fixed bottom-4 flex items-center gap-2 z-[100] pointer-events-none"
+                  style={{ right: "3rem" }}
                 >
-                  <StickersPanel onAddSticker={addSticker} />
+                  <div className="pointer-events-auto">
+                    <StickersPanel onAddSticker={addSticker} />
+                  </div>
                 </div>
 
 
