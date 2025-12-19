@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from "react";
+// 1. IMPORT useRouter
+import { useRouter } from "next/navigation"; 
 import { Plus, Trash2, CheckSquare, ChevronDown } from "lucide-react";
 import { getChecklistData, saveChecklistData, calculateChecklistProgress } from "../../lib/checklistUtils"; 
 import { useAuth } from "../../context/AuthContext";
-
 import ChecklistItem from "../../components/ChecklistItem";
-
 import { useNotification } from "../../context/NotificationContext";
 import ConfirmationModal from "../../components/ConfirmationModal";
 import { v4 as uuidv4 } from "uuid";
@@ -23,7 +23,8 @@ const LIGHT_BG_COLORS = [
 const LONG_PRESS_DURATION = 500;
 
 export default function ChecklistPage() {
-
+    // 2. INITIALIZE useRouter
+    const router = useRouter(); 
     const { user, loading } = useAuth(); 
 
     const [bgColor, setBgColor] = useState(LIGHT_BG_COLORS[0]);
@@ -51,9 +52,7 @@ export default function ChecklistPage() {
         setChecklistData(savedData);
     };
 
-
-
-    // 1. Load Data Effect: Load from Local Storage on Mount/User Change
+    // 1. Load Data Effect
     useEffect(() => {
       if (!loading && user?.id) {
         (async () => {
@@ -63,38 +62,30 @@ export default function ChecklistPage() {
       }
     }, [user, loading]);
 
+    // Save checklist whenever it changes
+    useEffect(() => {
+      if (!loading && user?.id) {
+        saveChecklistData(user.id, checklistData);
+      }
+    }, [checklistData, user, loading]);
 
-// Save checklist whenever it changes
-useEffect(() => {
-  if (!loading && user?.id) {
-    saveChecklistData(user.id, checklistData);
-  }
-}, [checklistData, user, loading]);
+    // Cross-tab sync
+    useEffect(() => {
+      if (!user?.id) return;
 
-// Cross-tab sync
-useEffect(() => {
-  if (!user?.id) return;
+      const handleStorageChange = (e) => {
+        if (e.key === `plannerChecklist_${user.id}`) {
+          loadData(user.id);
+        }
+      };
 
-  const handleStorageChange = (e) => {
-    if (e.key === `plannerChecklist_${user.id}`) {
-      loadData(user.id);
-    }
-  };
+      window.addEventListener("storage", handleStorageChange);
+      return () => window.removeEventListener("storage", handleStorageChange);
+    }, [user?.id]);
 
-  window.addEventListener("storage", handleStorageChange);
-  return () => window.removeEventListener("storage", handleStorageChange);
-}, [user?.id]);
-
-
-
-
-
-    // Recalculate completed tasks using useMemo for efficiency
     const completedTasks = useMemo(() => 
       checklistData.flatMap(c => c.items).filter(i => i.completed).length
-  , [checklistData]);
-
-
+    , [checklistData]);
 
     const toggleItem = (categoryId, itemId) => {
         let wasCompleted;
@@ -164,8 +155,6 @@ useEffect(() => {
         showNotification(`New list created: "${trimmedTitle}"!`, 'success');
     };
     
-    // --- CATEGORY DELETION LOGIC ---
-
     const handleCategoryDeleteRequest = (categoryId) => {
         const category = checklistData.find(c => c.id === categoryId);
         if (!category) return;
@@ -191,13 +180,8 @@ useEffect(() => {
         setCategoryToDeleteId(null);
     };
 
-    // --- MOBILE GESTURE LOGIC ---
-
     const handleLongPressStart = (e, categoryId) => {
-        e.preventDefault(); 
-        
         clearTimeout(longPressTimerRef.current);
-        
         longPressTimerRef.current = setTimeout(() => {
             setDeleteModeCategoryId(categoryId);
             showNotification("Long press detected! Press the red trash icon to delete.", 'warning');
@@ -214,11 +198,8 @@ useEffect(() => {
             setDeleteModeCategoryId(null); 
             return;
         }
-        
         toggleCollapse(categoryId);
     };
-    
-    // --- CLEAR COMPLETED LOGIC ---
     
     const handleClearCompletedClick = () => {
         if (completedTasks === 0) {
@@ -257,7 +238,6 @@ useEffect(() => {
     
     const buttonBase = "p-3 rounded-xl shadow-md transition-all duration-200 active:scale-[0.98] focus:outline-none";
 
-    // Dynamic Modal Content
     const getModalContent = () => {
         if (modalContext === 'clearCompleted') {
             return {
@@ -277,7 +257,6 @@ useEffect(() => {
     };
     const modalContent = getModalContent();
 
-    // Show a loading or prompt screen if the user data hasn't loaded yet
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
@@ -286,18 +265,17 @@ useEffect(() => {
         );
     }
     
-    // Show a prompt if no user is logged in
     if (!user) {
         return (
             <div 
-                className="flex flex-col items-center justify-center min-h-screen w-full px-4 sm:px-6 py-8 relative transition-colors duration-1000"
+                className="flex flex-col items-center justify-center min-h-screen w-full px-4 py-8 transition-colors duration-1000"
                 style={{ backgroundColor: bgColor }}
             >
                 <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 text-center">
                     <h2 className="text-2xl font-bold mb-4 text-[var(--color-dark-green)]">Access Denied</h2>
                     <p className="text-gray-700 mb-6">You must be logged in to view and manage your personal checklist.</p>
                     <button
-                        onClick={() => { /* In a real app, this should link to your /login page */}} 
+                        onClick={() => router.push("/login")} 
                         className={`${buttonBase} bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-dark)] px-6 py-3`}
                     >
                         Go to Login Page
@@ -307,29 +285,19 @@ useEffect(() => {
         );
     }
 
-
     return (
         <div 
             className="flex flex-col items-center min-h-screen w-full px-4 sm:px-6 py-8 relative transition-colors duration-1000 pb-24"
             style={{ backgroundColor: bgColor }} 
         >
-            
-            {/* Page Title */}
             <div className="w-full max-w-4xl pt-6 pb-3 px-4 sm:px-0 relative">
-                <header className="page-title-label">
-                    Checklist 
-                </header>
+                <header className="page-title-label">Checklist</header>
             </div>
 
-            {/* MAIN CONTENT AREA */}
             <div className="mt-4 w-full max-w-4xl flex flex-col gap-6 pb-4">
-
-                {/* TOP CONTROLS */}
                 {checklistData.length > 0 && (
                     <div className="flex justify-between items-center w-full">
                         <h2 className="text-2xl font-bold text-[var(--color-foreground)] hidden sm:block">Task Categories</h2>
-                        
-                        {/* Clear Completed Button */}
                         <button
                             onClick={handleClearCompletedClick}
                             disabled={completedTasks === 0}
@@ -354,11 +322,9 @@ useEffect(() => {
                             className={`w-full rounded-2xl shadow-xl bg-white border-4 overflow-hidden 
                                 ${deleteModeCategoryId === category.id ? 'border-red-500/50 scale-[1.01] transition-all duration-300' : 'border-[var(--color-card)]'}`}
                         >
-                            {/* Category Header (Interactive and Engaging Button Style) */}
                             <div 
                                 className="flex justify-between items-center p-4 cursor-pointer bg-[var(--color-accent-light)] hover:bg-[var(--color-accent-light)/80] transition-colors duration-150 active:scale-[0.99]"
                                 onClick={() => handleCategoryClick(category.id)}
-                                // Long press handlers
                                 onTouchStart={(e) => handleLongPressStart(e, category.id)}
                                 onTouchEnd={handlePressEnd}
                                 onTouchCancel={handlePressEnd}
@@ -366,36 +332,23 @@ useEffect(() => {
                                 onMouseUp={handlePressEnd}
                                 onMouseLeave={handlePressEnd}
                             >
-                                <h3 className="text-xl font-bold text-[var(--color-dark-green)]">
-                                    {category.title}
-                                </h3>
-                                
-                                {/* Dynamic Delete Button / Collapse Icon */}
+                                <h3 className="text-xl font-bold text-[var(--color-dark-green)]">{category.title}</h3>
                                 {deleteModeCategoryId === category.id ? (
-                                    // DELETE BUTTON APPEARS ON LONG PRESS
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             handleCategoryDeleteRequest(category.id);
                                         }}
                                         className="p-2 rounded-full bg-red-500 text-white hover:bg-red-600 active:scale-95 transition-all"
-                                        title={`Delete list: ${category.title}`}
                                     >
                                         <Trash2 className="w-6 h-6" />
                                     </button>
                                 ) : (
-                                    // DEFAULT COLLAPSE ICON
-                                    <ChevronDown 
-                                        className={`w-6 h-6 text-[var(--color-dark-green)] transition-transform duration-300 ${collapsedCategories[category.id] ? 'rotate-180' : 'rotate-0'}`} 
-                                    />
+                                    <ChevronDown className={`w-6 h-6 text-[var(--color-dark-green)] transition-transform duration-300 ${collapsedCategories[category.id] ? 'rotate-180' : 'rotate-0'}`} />
                                 )}
                             </div>
                             
-                            {/* Category Content (Collapsible) */}
-                            <div 
-                                className={`transition-all duration-500 ease-in-out ${collapsedCategories[category.id] ? 'max-h-0' : 'max-h-[1000px]'} overflow-hidden`}
-                            >
-                                {/* Task List */}
+                            <div className={`transition-all duration-500 ease-in-out ${collapsedCategories[category.id] ? 'max-h-0' : 'max-h-[1000px]'} overflow-hidden`}>
                                 <ul className="divide-y divide-[var(--color-card)] p-4">
                                     {category.items.map(item => (
                                         <ChecklistItem
@@ -405,11 +358,10 @@ useEffect(() => {
                                         />
                                     ))}
                                     {category.items.length === 0 && (
-                                        <p className="py-2 text-gray-500 italic">This list is empty. Add a new task below!</p>
+                                        <p className="py-2 text-gray-500 italic">This list is empty. Add a new task!</p>
                                     )}
                                 </ul>
 
-                                {/* Add New Item Input */}
                                 <form 
                                     onSubmit={(e) => {
                                         e.preventDefault();
@@ -422,8 +374,8 @@ useEffect(() => {
                                     <input
                                         name="newItem"
                                         type="text"
-                                        placeholder={`Add a new task to ${category.title}...`}
-                                        className="flex-grow p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-accent)] outline-none transition-shadow"
+                                        placeholder={`Add a new task...`}
+                                        className="flex-grow p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-accent)] outline-none"
                                     />
                                     <button type="submit" className={`${buttonBase} bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-dark)] px-4 py-2`}>
                                         <Plus className="w-5 h-5" />
@@ -434,26 +386,21 @@ useEffect(() => {
                     ))
                 )}
 
-                {/* ADD NEW CATEGORY INPUT (Interactive) */}
                 <form onSubmit={addCategory} className="flex flex-col sm:flex-row gap-2 p-4 rounded-2xl bg-white shadow-xl border-2 border-dashed border-[var(--color-muted)]">
                     <input
                         type="text"
                         value={newCategoryTitle}
                         onChange={(e) => setNewCategoryTitle(e.target.value)}
                         placeholder="Create New Category Title"
-                        className="flex-grow p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-accent)] outline-none transition-shadow"
+                        className="flex-grow p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-accent)] outline-none"
                     />
-                    <button 
-                        type="submit" 
-                        className={`${buttonBase} bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-dark)] flex items-center justify-center gap-2`}
-                    >
+                    <button type="submit" className={`${buttonBase} bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-dark)] flex items-center justify-center gap-2`}>
                         <CheckSquare className="w-5 h-5" />
                         <span className="font-semibold">Add New List</span>
                     </button>
                 </form>
             </div>
             
-            {/* CONFIRMATION MODAL INTEGRATION */}
             <ConfirmationModal
                 isOpen={isModalOpen}
                 onClose={handleModalClose}
@@ -462,7 +409,6 @@ useEffect(() => {
                 message={modalContent.message || "Are you sure you want to proceed?"}
                 confirmText={modalContent.confirmText || "Confirm"}
             />
-
         </div>
     );
 }

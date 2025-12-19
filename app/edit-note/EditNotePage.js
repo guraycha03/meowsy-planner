@@ -188,7 +188,7 @@ useEffect(() => {
 
 
   const buttonBaseClasses =
-    "flex items-center gap-2 px-4 py-2 rounded-full shadow-md transition-transform hover:scale-105 active:scale-95 w-auto justify-center";
+  "flex items-center gap-2 px-4 py-2 rounded-full shadow-md transition-transform hover:scale-105 active:scale-95 w-auto justify-center cursor-pointer touch-manipulation";
 
     
              return (
@@ -214,13 +214,18 @@ useEffect(() => {
                   
                   {/* Header and Title unchanged... */}
                   {/* HEADER */}
-                  <div className="flex flex-wrap justify-between items-center w-full gap-1 mt-0 mb-1">
-
+                  {/* HEADER - Updated with z-index to fix mobile click issues */}
+                  <div className="flex flex-wrap justify-between items-center w-full gap-2 mt-0 mb-1 relative z-[110]">
+                    
 
                   {/* Back Button */}
                   <button
-                    onClick={() => router.back()}
-                    className={`${buttonBaseClasses} px-5 py-2 bg-[var(--color-accent-light)] hover:bg-[var(--color-accent)] text-[var(--color-foreground)] font-semibold`}
+                    type="button" // Explicitly set type
+                    onClick={(e) => {
+                      e.preventDefault();
+                      router.back();
+                    }}
+                    className={`${buttonBaseClasses} px-5 py-2 bg-[var(--color-accent-light)] hover:bg-[var(--color-accent)] text-[var(--color-foreground)] font-semibold relative z-[120]`}
                   >
                     <ArrowLeft className="h-5 w-5" />
                     <span>Back</span>
