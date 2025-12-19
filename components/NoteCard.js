@@ -274,26 +274,37 @@ export default function NoteCard({ styleId, title, children, href }) {
     );
   }
   
-  // 7. Clip Board Note
-  // 7. Clip Board Note - IMPROVED FOR CONTRAST
+  // 7. Clip Board Note - SOFT BROWN EDITION
   if (style.variation === "clipboard-card") {
+    // A soft, milky brown that isn't too heavy or dark
+    const softBrown = "#D6C5B0"; 
+    
     return (
       <a 
         href={href} 
-        className={`${baseClasses} p-4 shadow-xl`} 
+        className={`${baseClasses} p-4 shadow-xl group`} 
         style={{
           ...customStyles,
-          // Use the defined border color as the background of the "board"
-          backgroundColor: style.borderColor, 
-          borderRadius: '12px'
+          backgroundColor: softBrown, // The soft brown board
+          borderRadius: '16px', // Slightly rounder for a friendlier UX
+          border: '1px solid rgba(0,0,0,0.05)'
         }}
       >
-        {/* Metal Clip Detail */}
-        <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-12 h-3 bg-gray-400 rounded-t-md opacity-80 z-20"></div>
+        {/* Metal Clip Detail - Rose Gold / Bronze color */}
+        <div 
+          className="absolute top-2 left-1/2 transform -translate-x-1/2 w-14 h-4 rounded-t-lg z-20 shadow-sm"
+          style={{ backgroundColor: "#B08D7B", opacity: 0.9 }} 
+        >
+          {/* Small rivet circle for extra realism */}
+          <div className="absolute top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-black/10 rounded-full"></div>
+        </div>
         
-        {/* The "Paper" - kept white for high contrast and readability */}
-        <div className="bg-white rounded-sm shadow-inner overflow-hidden flex flex-col relative z-10 min-h-full border border-black/5">
-          <CommonCardHeader noteStyle={style} className="pt-3 pb-2 text-center border-b border-gray-100">
+        {/* The "Paper" */}
+        <div className="bg-[#FEFDFB] rounded-sm shadow-md overflow-hidden flex flex-col relative z-10 min-h-full transition-transform group-hover:-translate-y-0.5">
+          <CommonCardHeader 
+            noteStyle={style} 
+            className="pt-4 pb-2 text-center border-b border-gray-50 italic"
+          >
             {title}
           </CommonCardHeader>
           <CommonCardContent className="pb-4">

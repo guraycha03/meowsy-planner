@@ -5,53 +5,50 @@ import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import { useNotification } from "../../context/NotificationContext";
 import { Plus, Clock, Trash2, Calendar as CalendarIcon } from "lucide-react";
+// Import your custom modal
+import ConfirmationModal from "../../components/ConfirmationModal"; 
 
 export default function CalendarPage() {
   const { showNotification } = useNotification();
   const [mounted, setMounted] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
-  
-  // Controls which month/year the calendar grid is displaying
   const [activeStartDate, setActiveStartDate] = useState(new Date());
-  
   const [showModal, setShowModal] = useState(false);
+  
+  // --- STATES FOR DELETE CONFIRMATION ---
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState(null);
+
   const [newEvent, setNewEvent] = useState({ title: "", date: "", time: "" });
 
-  // Load events from LocalStorage
   const [events, setEvents] = useState(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("planner_events");
       try {
         return saved ? JSON.parse(saved) : [];
-      } catch (e) {
-        return [];
-      }
+      } catch (e) { return []; }
     }
     return [];
   });
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     localStorage.setItem("planner_events", JSON.stringify(events));
   }, [events]);
 
   const selectedDateStr = currentDate.toISOString().split("T")[0];
+  
   const dayEvents = useMemo(() => {
     return events
       .filter((e) => e.date === selectedDateStr)
       .sort((a, b) => a.time.localeCompare(b.time));
   }, [events, selectedDateStr]);
 
-  // Jump to today logic
   const handleGoToToday = () => {
     const today = new Date();
     setCurrentDate(today);       
     setActiveStartDate(today);   
-    
-    // We trigger the notification here
     showNotification("Back to Today", "info");
   };
 
@@ -66,9 +63,20 @@ export default function CalendarPage() {
     showNotification("Event added!", "success");
   };
 
-  const deleteEvent = (id) => {
-    setEvents(events.filter((e) => e.id !== id));
-    showNotification("Event deleted", "info");
+  // --- TRIGGER DELETE MODAL ---
+  const openDeleteConfirm = (event) => {
+    setEventToDelete(event);
+    setIsDeleteModalOpen(true);
+  };
+
+  // --- ACTUAL DELETE LOGIC ---
+  const confirmDelete = () => {
+    if (eventToDelete) {
+      setEvents(events.filter((e) => e.id !== eventToDelete.id));
+      showNotification("Event deleted", "info");
+      setIsDeleteModalOpen(false);
+      setEventToDelete(null);
+    }
   };
 
   const tileContent = ({ date, view }) => {
@@ -88,10 +96,8 @@ export default function CalendarPage() {
   return (
     <div className="relative w-full min-h-screen px-4 py-8 flex flex-col items-center gap-6 pb-40 bg-[#ffffff]">
       
-      {/* HEADER: Z-index is 50. Anything overlapping must be 51+ */}
       <header className="page-title-label">Calendar</header>
 
-      {/* Main Content Layout */}
       <div className="w-full max-w-6xl mt-24 grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-8 items-start animate-in fade-in slide-in-from-top-4 duration-700">
         
         {/* Left Card: Calendar */}
@@ -153,9 +159,11 @@ export default function CalendarPage() {
                       <span className="text-[10px] font-bold text-[#B89AA4] tracking-wider uppercase">{event.time}</span>
                       <h4 className="text-[var(--color-foreground)] text-lg font-bold leading-tight">{event.title}</h4>
                     </div>
+                    
+                    {/* IMPROVED DELETE BUTTON: Visible on mobile, hover-only on desktop */}
                     <button 
-                      onClick={() => deleteEvent(event.id)}
-                      className="opacity-0 group-hover:opacity-100 p-3 text-gray-300 hover:text-red-400 transition-all active:scale-90"
+                      onClick={() => openDeleteConfirm(event)}
+                      className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 p-3 text-red-300/60 hover:text-red-500 transition-all active:scale-90"
                     >
                       <Trash2 size={20} />
                     </button>
@@ -174,7 +182,7 @@ export default function CalendarPage() {
         </div>
       </div>
 
-      {/* Modal: Increased Z-index to 110 to be above everything */}
+      {/* --- ADD EVENT MODAL --- */}
       {showModal && (
         <div className="fixed inset-0 bg-[#4B3C34]/30 backdrop-blur-md z-[110] flex items-center justify-center p-6">
           <div className="bg-white w-full max-w-sm rounded-[40px] p-10 shadow-2xl border-[8px] border-[var(--color-accent-light)] animate-in zoom-in duration-300">
@@ -215,6 +223,15 @@ export default function CalendarPage() {
         </div>
       )}
 
+      {/* --- CONFIRMATION MODAL --- */}
+      <ConfirmationModal 
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={confirmDelete}
+        title="Delete Plan?"
+        message={`Are you sure you want to remove "${eventToDelete?.title}" from your schedule? This cannot be undone.`}
+        confirmText="Delete Plan"
+      />
       
     </div>
   );
